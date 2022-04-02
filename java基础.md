@@ -165,9 +165,9 @@ public static void method(String... args){
 
 1. Java中的基本数据类型一定存储在栈中吗？
 
-   ​	不一定，栈内存用来存储局部变量和方法调用。如果该局部变量是基本数据类型如  `int  a  =  1 ;` 
+   ​	不一定，栈内存用来存储局部变量和方法调用。如果该局部变量是基本数据类型如  `int  a  =  1 ;` 那么直接将该值存储在栈中。
 
-   ​	那么直接将该值存储在栈中。如果该局部变量是一个对象，如  `int[]  arr = new  int[]{1,2,3} ;`
+   ​		如果该局部变量是一个对象，如  `int[]  arr = new  int[]{1,2,3} ;`
 
    ​	那么将引用存储在栈中而对象 {1，2，3} 存储在堆内
 
@@ -183,10 +183,53 @@ public static void method(String... args){
 
 - stack  segment ：存放函数参数和局部变量
 - heap  segment ：存放对象
-- data  segment ：静态变量或字符串常量
+- data  segment ：静态变量
 - code  segment：类中的方法
 
-​	
+##### String不可变
+
+​		String对象被设计成不可改变的对象，即String对象所包含的字面值发生改变时，会开辟一个新的地址，创建一个新的对象，原地址不变
+
+```java
+String a = "hello";
+String b = a;	
+a = "world";	// 此时b的值依然为"hello"
+```
+
+1. 变量a存储的是字符串的引用
+
+2. 不可变指的是堆中的字符串数据不可变
+
+3. 对于变量a，可以随意赋值，但是原来的字符串不变；这样其他引用这个字符串的地方，不会受到影响，线程也安全
+
+   **创建字符串**
+
+   java的字符串池属于JVM专门给指定的特殊内存区域，用来存储**字符串字面量**
+
+   - 字面量 ：`String  a = "hello" ;` 
+
+   - new ： `String  b = new String("world") ;` 
+
+   **两种方式的区别**
+   
+   1. 字面量的方式，首先会在常量池中找该字符串。如果存在，则将变量指向这个地址，如果不存在，则在方法区创建一个存放字面值 "hello" 的地址
+   
+   2. 使用new创建String变量时，在堆中创建一个存放 "world" 的对象，使变量b指向堆中的对象
+   
+  ```java
+   String a = "hello";
+   String b = "hello";
+   String c = new String("world");
+   String d = new String("world");
+  ```
+
+​		分析：
+
+1. ​      在创建 a 时，字符串常量池中没有存储 "hello" 的地址，就在常量池中创建一个存      放"hello" 的地址，使变量 a 指向该地址。创建 b 的时候，字符串常量池已存在存  放"hello" 的地址，将 b 变量指向该地址，此时 a 与 b 指向同一内存地址，所以 此时 a == b 为 true
+2. ​     使用new关键字创建对象时，每一次都会在堆中创建一个新的对象，所以 c 和 d 指向对象的地址不同，c == d 为 false
+3. ​     a 与 c 指向的地址不同，所以 a == c 为false
+
+
 
 ### 数组的排序
 
@@ -207,7 +250,7 @@ int[] arr = new arr[10];
 for(int i=10; i<arr.length; i++){
     arr[i] = (int)(Math.random()*100);
 }
-for(int i=0; i<arr.length; i++){
+for(int i=0; i<arr.length-1 ; i++){
     for(int j=0; j<arr.length-1-i; j++){
         if(arr[j] > arr[j+1]){
             int temp = arr[j+1];
