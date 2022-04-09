@@ -120,6 +120,18 @@ a += b;
         }
 ```
 
+**引用类型数组**
+
+```java
+Cell[]  cell = new Cell[4];	//Cell为自定义类
+```
+
+<img src=".\note_imgs\数组内存.png" style="zoom:67%;" />
+
+​	`new  Cell[4]` 实际上是在堆中分配了4个空间用于存放4个Cell类型的引用，并不是分配了4个Cell类型的对象，需要通过  `cell[0] = new  Cell();` 将每个引用指向具体的对象
+
+​	引用类型数组的默认初始值为 `null`
+
 ##### continue、break、return的区别
 
 - continue：指跳出当前的这一次循环，继续下一次循环
