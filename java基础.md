@@ -12,15 +12,26 @@
 
 -   包：其实就是文件夹，用于解决相同类名的问题
   - 全部小写         单极：com      多级：cn.itcast
+  
 -   类或者接口
     - 一个单词：首字母大写      Student、Person、Teacher
     - 多个单词：每个首字母大写      HelloWorld、MyName、NameDemo
+    
 -   方法或者变量
     - 一个单词：全部小写     name、age、show()
     - 多个单词：从第二个单词开始，每个单词首字母大写       myName、showAllStudentNames()
+    
 -   常量
     - 一个单词：全部大写     AGE
+    
     - 多个单词：每个单词都大写，用 _  连接     STUDENT_MAX_AGE
+    
+
+**小结**
+
+1. 自己起变量名时，一般都是纯字母
+2. 常量多个单词时，用 `_`
+3. 内部类完整名称，用 `$` 和数字（匿名内部类）
 
 
 ##### Java语言关键字  
@@ -142,6 +153,18 @@ Cell[]  cell = new Cell[4];	//Cell为自定义类
   
   - `return  value；` return一个特定值，用于有返回值函数的方法
 
+##### public  static  void  main( String[]  args)
+
+JVM 会寻找特定的方法签名开始运行，该方法为  `public static void main(String[] args)` ， args 是字符串数组类型的参数， `String[] args` 也可以写成 `Strting args[]` 、`String...args` 
+
+参数类型（字符串）是固定的，但 `args` 可以更改为任何内容
+
+- `public` ：访问修饰符，表示任何类都可以访问此方法（如果其他类可以访问此类）
+- `static` ：标识与类相关的关键字，表示无需创建类实例即可对其访问
+- `void` ：方法的返回类型，表示没有返回值
+- `main` ：方法名，JVM 以此方法名作为具有特定签名的应用的起点
+- `String[] args` ：`main` 方法的参数，参数名可以更改
+
 ##### 可变长参数
 
 在定义方法时，在最后一个形参后加上三个点 `...` ，就表示该形参可以接收多个参数值，多个参数值被当成数组传入
@@ -155,6 +178,46 @@ public static void method(String... args){
 - 可变参数只能作为函数的最后一个参数，但其前面可以有也可以没有任何其他参数
 - 由于可变参数必须是最后一个参数，所以一个函数最多只能有一个可变参数
 - 遇到方法重载会优先匹配固定参数的方法，因为固定参数的方法匹配度更高
+
+##### 执行顺序
+
+Java 类中的不同块及其执行顺序：
+
+1. 静态块
+2. 初始化块（匿名块）
+3. 构造器
+
+```java
+public class A {
+    {
+        System.out.println("Ananymous Block");
+    }
+    static {
+        System.out.println("Static Block");
+    }
+    public A() {
+        System.out.println("Constructor of Class");
+    }
+    public static void main(String[] args) {
+        A a = new A();
+        System.out.println("--------------------");
+        A a1 = new A();
+    }
+}
+```
+
+上面程序的输出结果：
+
+```
+Static Block
+Ananymous Block
+Constructor of Class
+--------------------
+Ananymous Block
+Constructor of Class
+```
+
+static 块仅在加载类时调用一次，但是实例化一个类的对象时，匿名块和构造器就会被调用，初始化块首先执行，然后构造器
 
 ##### 栈 、堆的简单理解
 
