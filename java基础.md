@@ -36,11 +36,11 @@
 
 ##### Java语言关键字  
 
-<img src=".\note_imgs\关键字.png" alt="关键字" style="zoom: 80%;" />
+<img src=".\note_imgs\关键字.png" alt="关键字" style="zoom: 67%;" />
 
 ##### 基本数据类型
 
-<img src=".\note_imgs\基本数据类型.png" alt="基本数据类型" style="zoom:80%;" />
+<img src=".\note_imgs\基本数据类型.png" alt="基本数据类型" style="zoom: 67%;" />
 
 **注意事项：**
 
@@ -90,8 +90,6 @@ a += b;
 1.  是一种最基本的数据结构
 
 2.  数组的长度在创建后是不可改变的
-
-   
 
 - 一维数组
 
@@ -190,7 +188,7 @@ Java 类中的不同块及其执行顺序：
 ```java
 public class A {
     {
-        System.out.println("Ananymous Block");
+        System.out.println("Anonymous Block");
     }
     static {
         System.out.println("Static Block");
@@ -210,10 +208,10 @@ public class A {
 
 ```
 Static Block
-Ananymous Block
+Anonymous Block
 Constructor of Class
 --------------------
-Ananymous Block
+Anonymous Block
 Constructor of Class
 ```
 
@@ -294,8 +292,8 @@ a = "world";	// 此时b的值依然为"hello"
   ```java
    String a = "hello";
    String b = "hello";
-   String c = new String("world");
-   String d = new String("world");
+   String c = new String("hello");
+   String d = new String("hello");
   ```
 
 ​		分析：
