@@ -35,11 +35,18 @@
       - 替换功能
         - `String  replace(char old,char new)` 
         - `String  replace(String old,String new)`
+        
       - 去除字符串两边空格
         - `String  trim()`
+        
       - 按字典顺序比较两个字符串
         - `int  compareTo(String str)`
+        
         - `int compareToIgnoreCase(String str)`
+   5. 正则
+      - `boolean  matches(String regexp)` ：将一个字符串与正则表达式进行匹配，匹配成功返回 `true`
+      - `String[]  split(Strinig regexp)` ：将字符串按照正则表达式拆分成字符串数组
+      - `String  replaceAll(String regexp,String replacement)` ：将字符串中匹配正则表达式 `regxep` 的字符串替换成 `replacement` 
 
 #### `StringBuffer`
 
@@ -72,7 +79,7 @@
 #### `Integer`
 
 1. 成员方法
-   - Integer.pareInt() ：将字符串转为 int 类型
+   - `Integer.pareInt()` ：将字符串转为 int 类型
 
 #### `Character`
 
