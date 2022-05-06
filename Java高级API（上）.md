@@ -1,3 +1,5 @@
+### `API` 
+
 ##### `API`文档
 
 JDK 中包含大量的 API 类库，所谓 API（Application Program Interface,应用程序编程接口）就是一些已写好，可供直接调用的功能（在Java 语言中，这些功能以类的形式封装）
@@ -251,6 +253,34 @@ public boolean equals(Object obj){
 }
 ```
 
+###### `==` 和 `equals()` 的区别
+
+`==` 对于基本类型和引用类型的作用效果是不同的：
+
+- 对于基本数据类型来说：`==` 比较的是值
+
+- 对于引用数据类型来说，`==` 比较的是对象的内存地址
+
+  > 因为 `Java` 只有值传递，所以，对于 `==` 来说，不管是比较基本数据类型，还是引用数据类型的变量，其本质比较的都是值，只是引用类型变量存的值是对象的地址
+
+`equals()` 不能用于判断基本数据类型的变量，只能用来判断两个对象是否相等；`equals()` 存在于 `Object` 类中，而 `Object` 类是所有类的直接或间接父类，因此所有的类都有 `equals()` 
+
+Object 类中的 equals() ：
+
+```java
+public boolean equals(Object obj) {
+     return (this == obj);
+}
+```
+
+`equals()` 存在两种使用情况：
+
+- 类没有重写 `equals()` ：通过 `equals()` 比较该类的两个对象时，等价于通过 ” `==` “ 比较这两个对象，使用的默认是 `Object` 类中的 `equals()`
+
+- 类重写了 `equals()` ：一般重写 `equals()` 来比较两个对象中的属性是否相等，若它们的属性相等，则返回 `true`（即认为这两个对象相等）
+
+  > `String` 中的 `equals()` 是被重写过的，比较的是对象的值
+
 ##### 包装类
 
 在基本类型转换的范畴内，有一种特殊的转换，需要将 `int` 这样的基本数据类型转换为对象；所有基本类型都有一个与之对应的类，即包装类；包装类是不可变类，在构造了包装类对象后，不允许更改包装在其中的值（因为值被 `final` 修饰）；包装类被 `final` 修饰，不能定义它们的子类
@@ -489,7 +519,7 @@ System.out.ptintln(sdf.format(c.getTime()));  // 没有被设置的默认为系�
 
 ##### `List` 和 `Set`
 
-在实际开发中，需要将使用的对象存储与特定数据结构的容器中，`JDK` 提供了这样的容器 ---- 集合（`Collection`）；`Collection` 是一个接口，定义了集合相关的操作方法，其有两个子接口 `List`、`Set`
+在实际开发中，需要将使用的对象存储于特定数据结构的容器中，`JDK` 提供了这样的容器 ---- 集合（`Collection`）；`Collection` 是一个接口，定义了集合相关的操作方法，其有两个子接口 `List`、`Set`
 
 - `List` ：可重复集，`Set` ：不可重复集
 - 不可以放基本数据类型
@@ -555,4 +585,350 @@ System.out.println(cells);  // 输出数据发生改变（多个引用指向同�
   System.out.println(c1.containsAll(c3));    // true
   ```
 
+##### **`Iterator`**
+
+迭代器用于遍历集合元素，获取迭代器可以使用 `Collection` 定义的方法（`Iterator iterator()`）；迭代器 `Iterator` 是一个接口，集合在重写 `Collection` 的 `iterator()` 方法时利用内部类提供迭代器的实现；`Iterator` 提供了统一的遍历集合的方式，其提供了用于遍历集合的两个方法：
+
+- `boolean  hasNext()` ：判断集合是否还有元素可以遍历
+
+- `E  next()` ：返回迭代的下一个元素
+
+  ```java
+  Collection<String> c1 = new HashSet<>();
+  c1.add("a");
+  c1.add("b");
   
+  Iterator<String> it = c1.iterator();
+  while(it.hasNext()){
+      String str = it.next();
+      System.out.println(str);
+  }            
+  ```
+
+- `void  remove()` ：在使用迭代器遍历集合时，不能通过集合的 `remove()` 删除元素，否则会抛出并发更改异常，我们可以通过迭代器自身提供的 `remove()` 来删除通过 `next()` 迭代出的元素；迭代器删除方法是在源集合中删除元素；需要注意的是：在调用 `remove()` 前必须通过迭代器的 `next()` 迭代过元素，那么删除的就是这个元素，并且需要再次使用 `next()` 后才可再次调用 `remove()`
+
+  ```java
+  Collection<String> c1 = new HashSet<>();
+  c1.add("a");
+  c1.add("b");
+          
+  Iterator<String> it = c1.iterator();
+  while(it.hasNext()){
+       String str = it.next();
+       if(str.startsWith("a")){
+            it.remove();
+        }
+  }       
+  ```
+
+**增强型 for 循环**
+
+Java 5.0 之后推出了一个新的特性，增强 for 循环，也称为新循环，该循环不通用于传统循环的工作，其只用于遍历集合或数组；新循环并非新的语法，而是在编译过程中，编译器会将新循环转为迭代器模式，所以新循环本质上是迭代器
+
+```java
+for (元素类型 e : 集合或数组) {
+    循环体
+}
+
+Collection<String> c1 = new HashSet<>();
+c1.add("a");
+
+for (String str : c1) {
+    System.out.println(str);
+}
+```
+
+**泛型机制**
+
+泛型是 `JavaSE 5.0` 引入的特性，泛型的本质是参数化类型，在类、接口和方法 的定义过程中，所操作的数据类型被传入的参数指定；`Java` 泛型机制广泛的应用在集合框架中，所有的集合类型都带有泛型参数，这样在创建集合时可以指定放入集合中元素的类型，`Java` 编译器可以据此进行类型检查，这样可以减少代码在运行时出现错误的可能性
+
+`ArrayList<E>` 类的定义中，`<E>` 中的 `E` 为泛型参数，在创建对象时可以将类型作为参数传递，此时类中定义的所有 `E` 将被替换为传入的参数
+
+##### 集合操作（线性表）
+
+`ArrayList` 和 `LinkedList` ：`List` 接口是 `Collection` 的子接口，用于定义线性表数据结构，可以将 `List` 理解为存放对象的数组，只不过其元素个数可以动态的增加或减少；`List` 接口的两个常见实现类 `ArrayList` 和 `LinkedList` ，分别用动态数组和链表的方式实现了 `List` 接口；可以认为 `ArrayList` 和 `LinkedList` 的方法在逻辑上完全一样，只是在性能上有一定差别，`ArrayList` 更适合用于随机访问而 `LinkedList` 更适合用于插入和删除，在性能要求不是特别高的情况下可以忽略这个差别；小结：
+
+- `List`：定义线性表的数据结构，`ArrayList` 和 `LinkedList` 都是线性表结构（线性：有顺序，一个接一个）
+- `ArrayList` 和 `LinkedList`  方法相同，对于调用者而言没有区别，但是底层逻辑不同，导致性能不同
+
+`ArrayList` 和 `LinkedList` 的底层逻辑（底层结构）
+
+- `ArrayList` ：动态数组结构
+
+- `LinkedList` ：链表结构
+
+  上述都是线性结构，都可以理解为：存放对象的数组，只不过可以动态改变
+
+**常用方法：**
+
+`List` 除了继承 `Collection` 定义的方法外，还根据其线性表的数据结构定义了一系列的方法，其中最常用的就是基于下标的 `get` 和 `set` 方法：
+
+- `E  get(int index)` ：获取集合中指定下标对应的元素，下标从 `0` 开始
+
+- `E  set(int index,E element)` ：将给定的元素存入给定位置，并将原位置的元素返回
+
+  ```java
+  List<String> c1 = new ArrayList<>();
+  c1.add("a");
+  c1.add("b");
+  c1.set(0,c1.set(1,c1.get(0)));	// 交换 a，b 在集合中的位置
+  ```
+
+- `void  add(int index,E element)` ：将给定的元素插入到指定的位置，原位置及后续元素都顺序向后移动
+- `E  remove(int index)` ：删除给定位置的元素，并将被删除的元素返回
+
+- `List<E>  subList(int fromIndex,int toIndex)` ：用于获取子 `List` ，截取子 `List` 的首尾下标（前包括，后不包括）；需要注意的是，`subList` 获取的 `List` 与原 `List` 占有相同的存储空间，对子 `List` 的操作会影响原 `List` 
+
+  ```java
+  List<Integer> c1 = new ArrayList<>();
+  for (int i = 0; i < 4; i++){
+      c1.add(i);
+  }					// c1 : [0,1,2,3]
+  List<Integer> subList = c1.subList(1,3);  // sublist : [1,2]
+  subList.clear();    // c1 : [0,3]
+  ```
+
+
+##### `List` 与数组之间的转换
+
+1. **`List` 转换为数组**：`List` 的 `toArray()` 用于将集合转换成数组，该方法是在 `Collection` 中定义的，因此所有的集合都具备这个功能
+
+   - `Object[]  toArray()` ：将集合中的所有元素放入 `Object` 数组中返回，需要用 `Object` 数组接收
+
+   - `<T>T[]  toArray(T[] a)` ：这个方法较常用，可以传入一个指定的类型的数组，该数组的元素类型应与集合的元素类型一致，返回值是转换后的数组，该数组会保存集合中的所有元素；传入的数组可以指定长度，如果指定的长度小于集合元素的长度，则转换后的数组长度为集合元素的长度，不会为指定长度；如果指定的长度大于集合的元素个数，则转换后的数组长度与指定的长度相同，并且使用 `null` 填充数组
+
+     ```java
+     List<String> list = new ArrayList<>();
+     list.add("a");
+     list.add("b");
+     list.add("c");
+     String[] strarr1 = list.toArray(new String[]{});	// [a,b,c]
+     String[] strarr2 = list.toArray(new String[1]);		// [a,b,c]
+     String[] strarr3 = list.toArray(new String[4]);		// [a,b,c,null]
+     ```
+
+2. 数组转换为 `List` ：Arrays 类中提供有个静态方法 asList() ，使用该方法可以将一个数组转换成对应的 List 集合
+
+   - `static  <T>List<T>  asList<T...a>` ：返回的 List 的集合类型由传入的数组的元素类型决定；要注意的是：返回的集合不能对其增删元素，否则会抛出异常，并且对集合的元素进行修改会影响数组对应的元素
+
+     ```java
+     String[] strarr = {"a","c"};
+     List<String> list = Arrays.asList(strarr);	  // [a,c]
+     
+     System.out.println(list.getClass().getName());	  // java.util.Arrays$ArrayList
+     list.add("m");    // UnsupportedOperationException
+     ```
+
+##### `List` 排序
+
+1. `Collections.sort()` 实现排序：`Collections` 是集合的工具类，它提供了很多方便我们操作集合的方法，其中就有用于集合排序的 `sort()` 
+
+   - `static  void  sort(List<T> list)` ：对给定的集合元素进行自然排序
+
+     ```java
+     List<Integer> list = new ArrayList<>();
+     Random r = new Random();
+     for (int i = 0; i < 4; i++){
+         list.add(r.nextInt(10));	// 随机生成 4 个 0-9 的整数放入集合 list 中
+     }
+     Collections.sort(list);		// 对集合 list 从小到大进行排序
+     ```
+
+2. `Comparable` ：`Collections` 的 `sort()` 是对集合元素进行自然排序，那么两个元素对象之间就一定要有大小之分，这个大小之分如何界定？实际上，在使用 `Collections` 的 `sort()` 排序的集合元素必须是 `Comparable` 接口的实现类，该接口表示其子类是可比较的，因为实现该接口必须重写抽象方法：
+
+   - `int  comparableTo(T t)` ：若当前对象小于给定对象，那么返回值应为小于 `0` 的整数；若当前对象大于给定对象，那么返回值应为大于 `0` 的整数；若当前对象等于给定对象，那么返回值应为等于 `0` 
+
+     ```java
+      // 使自定义类 Cell 实现接口 Comparable ，通过 Cell 中的 row 成员变量的大小进行排序
+     public class Cell implements Comparable<Cell>{
+         @Override
+         public int compareTo(Cell cell) {
+             return this.row - cell.row;
+         }
+     }
+     List<Cell> list = new ArrayList<>();
+     list.add(new Cell(1,1));
+     list.add(new Cell(2,2));
+     Collections.sort(list);
+     ```
+
+3. `Comparator` ：一旦 Java 类实现了 `Comparable` 接口，其比较逻辑就已经确定，如果希望在排序的操作中临时指定比较规则，可以采用 `Comparator` 接口回调的方式
+
+   - `int  compare(T o1,T o2)` ：若 o1 > o2 则返回值应大于 0；若 o1 < o2 则返回值应大于 0；若 o1 = o2 则返回值应等于 0
+
+     ```java
+     List<Cell> list = new ArrayList<>();
+     list.add(new Cell(1,1));
+     list.add(new Cell(2,2));
+     
+     // Collections.sort(list,new Comparator<Cell>(){});
+     list.sort(new Comparator<Cell>() {
+         @Override
+         public int compare(Cell o1, Cell o2) {
+             return o2.col - o1.row;
+         }
+     });
+     ```
+
+##### 队列和栈
+
+队列（`Queue`）是常用的数据结构，可以将队列看成特殊的线性表，队列限制了对线性表的访问方式：只能从线性表的一端添加（`offer`）元素，从另一端取出（`poll`）元素；队列遵循先进先出（`FIFO：First input First Output`）的原则；`JKD` 中提供了 `Queue` 接口，同时使得 `LinkedList` 实现了该接口（选择 `LinkedList` 实现 `Queue` 的原因在于 Queue 经常需要进行添加和删除操作，而 `LinkedList` 在这方面效率将高）
+
+- `boolean  offer(E e)` ：将一个对象添加至队尾，如果添加成功则返回 true
+
+- `E  poll()` ：从队首删除并返回一个元素
+
+- `E  peek()` ：返回队首元素（并不删除）
+
+  ```java
+  Queue<String> queue = new LinkedList<>();
+  queue.offer("a");
+  queue.offer("b");	// offer: [a,b]
+  
+  while (queue.size() > 0){
+      System.out.print(queue.poll() + " ");
+  }
+  
+  System.out.println(queue);   // []
+  ```
+
+`Deque` 是 `Queue` 的子接口，定义了所谓的 ” 双端队列 “ 即从队列的两端分别可以入队（`offer`）和出队（`poll`），`LinkedList` 实现了该接口
+
+如果将 `Deque` 限制为只能从一端入队和出队，则可实现 “ 栈 ”（`Stack`）的数据结构；对于栈而言，入栈称之为 `push`，出栈称之为 `pop`；栈遵循先进后出（`FIFO：First Input Last Output`）的原则
+
+`Java` 集合没有单独的 `Stack` 接口，因为有个遗留类名字就叫 `Stack`，出于兼容性考虑，没有创建 `Stack` 接口，但能用 `Deque` 接口 “ 模拟 ” 一个 `Stack`；当我们把 `Deque` 作为栈使用时，注意只调用 `push()` 、`pop()` 、`peek()` ，不要调用 `addFirst()` 、`removeFirst()` 、`peekFirst()` ......
+
+```java
+Deque<String> stack = new LinkedList<>();
+stack.push("a");
+stack.push("b");
+stack.push("c");	// stack: [c,b,a]
+
+while(stack.size() > 0){
+    System.out.print(stack.pop() + " ");    //  c b a
+}
+System.out.println();
+System.out.println(stack);    // []
+```
+
+##### `Map` 接口
+
+`Map` 接口定义的集合又称为查询表，用于存储所谓 “ `Key-Value` ” 映射对，`Key` 可以看成是 `Value` 的索引，作为 `Key` 的对象在集合中不可以重复；根据内部数据结构的不同，`Map` 接口有多种实现类，其中常用的有内部为 `hash` 表实现的 `HashMap` 和内部为排序二叉树实现的 `TreeMap`
+
+- `V  put(K key,V value)` ：将 `Key-Value` 对存入 `Map`，如果在集合中已经包含该 `Key`，则将操作变为替换该 `Key` 所对应的 `Value`，返回值为 `Key` 原来所对应的 `Value` (如果集合中没有包含该 `Key`则返回 `null` )
+
+- `V  get(Object key)` ：返回参数 `key` 所对应的 `Value` 对象，如果不存在则返回 `null`
+
+- `boolean  containsKey(Object key)` ：若 `Map` 中包含给定的 `key` 则返回 `true`，否则返回 `false`
+
+  ```java
+  Map<Integer,Integer> map = new HashMap<>();
+  map.put(1,10);
+  map.put(2,20);
+  System.out.println(map.get(2));    // 20
+  System.out.println(map.containsKey(2));	  // true
+  ```
+
+hashcode 方法 ：返回该对象所在内存地址的整数形式
+
+- 重写 `hashCode()` 需要注意两点：
+  1. 与 `equals()` 的一致性，即 `equals` 比较返回 `true` 的两个对象其 `hashCode()` 的返回值应该相同
+  2. `hashCode()` 返回的数值应该符合 `hash` 算法的要求；如果有很多对象的 `hashCode` 方法返回值都相同，则会大大降低 `hash` 表的效率，一般情况下可以使用 `IDE`（如 `Eclipse`、`idea`）提供的工具自动生成 `hashCode()`
+- 查看重写的 `hashCode()` :
+  1. 是否根据对象的属性值进行重写
+  2. `hashCode()` 中用到的属性是否也是 `equals()` 比较时用到的属性
+
+Map 中的一些静态属性：
+
+- `capacity`：容量，`hash` 表里的 `bucket`（桶）的数量，也就是散列数组大小
+- `initial  capacity`：初始容量，创建 hash 表时，初始 `bucket` 的数量，默认构建容量是 16
+- `size`：大小，当前散列表中存储数据的数量
+- `loadfactor`：加载因子，默认值是 0.75（也就是 75%），当向散列表增加数据时，如果 `size / capacity` 的值大于 `loadfactor` 则发生扩容并且重新散列（`rehash`）
+
+性能优化：加载因子较小时，散列查询性能会提高，同时也浪费散列桶空间容量，0.75 是性能和空间相对平衡的结果，在创建散列表时指定合理容量，减少 `rehash` 提高性能
+
+##### `Map` 的遍历
+
+- `Set<K>  keySet()` ：遍历所有的 `key` ，该方法会将当前 `Map` 中的所有 `key` 存入一个 `Set` 集合后返回
+
+  ```java
+  Set<Character> set = map.keySet();
+  for (char c : set) {
+      System.out.println(c + ":" + map.get(c));
+  }
+  ```
+
+- `Set<Entry<K,V>>  entrySet()` ：遍历所有的键值对的方法，该方法会将当前 `Map` 中的每一组 `key-value` 对封装为一个 Entry 对象并存入一个 `Set` 集合后返回
+
+  ```java
+  Set<Map.Entry<Character,Integer>> entry = map.entrySet();
+  for (Map.Entry<Character,Integer> e : entry){
+      System.out.println(e);
+      System.out.println(e.getKey() + "");
+  }
+  ```
+
+有序的 `Map`：`LinkedHashMap` 实现有序 `Map`；使用 `Map` 接口的哈希表和链表实现，具有可预知的迭代顺序，此实现与 `HashMap` 的不同之处在于：LinkedHashMap 堆维护这一个双向循环列表，此链表定义了迭代顺序，该迭代顺序
+
+通常就是存放元素的顺序；需要注意的是：如果在 `Map` 中重新存入已有的 `key`，那么 `key` 的位置不会变化，只是 `value` 替换
+
+### 文件操作
+
+`java.io.File` 用于表示文件（目录），也就是说程序员可以通过 `File` 类在程序中操作硬盘中的文件和目录；`File` 类只用于表示文件（目录）的信息（名称、大小等），不能对文件的信息进行访问
+
+构造方法：
+
+- `public  File(String name)` ：通过将给定路径名字符串转换成抽象路径名来创建一个新 `File` 实例；抽象路径应尽量使用相对路径，并且目录的层级分离不要直接写 " `/` " 或 " `\` "，应使用 `File.separator` 这个常量表示，以避免不同系统带来的差异
+
+- `public  File(File parent,String child)` ：根据 `parent` 抽象路径名和 `child` 路径名字符串创建一个新的 `File` 实例
+
+  ```java
+  File parent = new File("demo");
+  File file = new File(parent,"hello.txt");
+  ```
+
+##### 常用方法
+
+- `boolean  isFile()` ：判断当前 `File` 对象所表示的是否为一个文件
+
+- `long  length()` ：返回当前对象所表示的文件所占用的字节量
+
+- `boolean  exists()` ：若该 File 表示的文件或目录存在则返回 `true`，否则返回 `false`
+
+- `boolean  createNewFile()` ：如果指定的文件不存在并且成功创建，则返回 `true`；如果指定的文件已经存在，则返回 `false`
+
+- `boolean  delete()` ：当成功删除文件或目录时，返回 `true`，否则返回 `false`；需要注意的是：若此 `File` 对象所表示的是一个目录时，在删除时需要保证此为空目录才可以成功删除（目录中不能含有任何子项）
+
+- `boolean  isDirectory()` ：当 `File` 对象表示的是一个目录则返回 `true`；否则返回 `false`
+
+- `boolean  mkdir()` ：当成功创建目录时，返回 `true`；否则返回 `false`
+
+- `boolean  mkdirs()` ：用于创建此抽象路径名指定的目录，包括所有必须但不存在的父目录；注意：此操作失败时也可能创建一部分必须的父目录
+
+  ```java
+  File file = new File("dir" + File.separator + "dir2");
+  System.out.println(file.mkdirs());
+  ```
+
+- `File[]  listFiles()` ：返回值为抽象路径名数组，这些路径名表示此抽象路径名表示的目录中的文件和目录；如果目录为空，那么数组也将为空；如果抽象路径名不表示一个目录或者发生 `I/O` 错误，则返回 `null`
+
+  ```java
+  File file = new File("dir");
+  File[] fs = file.listFiles();
+  System.out.println(Arrays.toString(fs));
+  ```
+
+##### `FileFilter` 接口
+
+用于抽象路径名的过滤器；此接口的实例可传递给 `File` 类的 `listFiles()`；用于返回满足该过滤器要求的子项
+
+- `File[]  listFiles(FileFilter filter)` ：
+
+  ```java
+  File[] fs = file.listFiles(new FileFilter() {
+      @Override
+      public boolean accept(File pathname) {
+          return pathname.getName().endsWith(".txt");
+      }
+  });
+  ```

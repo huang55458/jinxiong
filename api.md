@@ -122,3 +122,29 @@
    - `public  static  void  exit(int status)` ：终止当前运行的 Java 虚拟机
    - `public  static  long  currentTimeMillis()` ：以毫秒为单位返回当前时间
    - `public  static  void  arraycopy(Object src,int srcPos,Object dest,int destPos,int length)` ：将指定源数组中的数组从指定位置开始复制到目标数组的指定位置
+
+#### `Collections`
+
+1. 排序操作
+   - `static  void  reverse(List list)` ：反转
+   - `static  shuffle(List list)` ：随机排序
+   - `static  void  sort(List list)` ：按自然排序的升序排序
+   - `static  void  sort(List list,Comparor c)` ：定制排序，由 `Comparator` 控制排序逻辑
+   - `static  void  swap(List list,int i,int j)` ：交换两个索引位置的元素
+   - `static  void  rotate(List list,int distance)` ：旋转，当 `distance` 为正数时，将 `list` 后 `distance` 个元素整体移到前面；当 `distance` 为负数时，将 `list` 的前 `distance` 个元素整体移到后面
+2. 查找、替换操作
+   - `static  int  binarySearch(List list,Object key)` ：对 `List` 进行二分查找，返回索引，注意 `List` 必须是有序的
+   - `static  int  max(Collection coll)` ：根据元素的自然顺序，返回最大的元素
+   - `static  int  min(Collection coll)` 
+   - `static  int  max(Collection coll,Comparator c)` ：根据定制排序，返回最大元素，排序规则由 `Comparator` 类控制
+   - `static  int  min(Collection coll,Comparator c)` 
+   - `void  fill(List list,Object obj)` ：用指定的元素代替指定 `List` 中的所有元素
+   - `int  frequency(Collection c,Object o)` ：统计元素出现次数
+   - `int  indexOfSubList(List list,List target)` ：统计 `target` 在 `List` 中第一次出现的索引，找不到则返回 `-1` 
+   - `int  lastIndexOfSubList(List list,List target)` 
+   - `boolean  replaceAll(List list,Object oldVal,Object newVal)` ：用新的元素替换旧的元素
+3. 同步控制（不推荐，效率低，需要线程安全的集合类型考虑使用 JUC 包下的并发集合）
+   - `synchronizedCollection(Collection<T> c)` ：返回指定 `collection` 支持的同步（线程安全的）`collection`
+   - `synchronizedList(List<T> list)` ：返回指定列表支持的同步（线程安全的）`List`
+   - `synchronizedMap(Map<K,V> m)` ：返回指定映射支持的同步（线程安全的）`Map`
+   - `synchronizedSet(Set<T> s)` ：返回指定映射 `Set` 的同步（线程安全的）`Set`
