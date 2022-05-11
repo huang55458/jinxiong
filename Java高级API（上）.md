@@ -206,7 +206,7 @@ String str2 = new StringBuilder(Str1).append("b").toString();
 
 ```java
 public  final  native  Class<?>  getClass() 	// 用于返回当前运行时对象的 Class 对象
-public  native  int  hashcode()		// 返回对象的哈希码，主要使用在哈希表中，比如 JDK 中的 HashMap
+public  native  int  hashCode()		// 返回对象的哈希码，主要使用在哈希表中，比如 JDK 中的 HashMap
 public  boolean  equals()	// 用于比较 2 个对象的内存地址是否相等，String 类对该方法进行了重写以用于比较字符串的值是否相等
 protected  native  Object  clone()  throws CloneNotSupportedException  // 创建并返回当前对象的一份拷贝
 public  String  toString()  // 返回类的名字的实例的哈希码的 16 进制的字符串，建议 Object 所有的子类都重写这个方法
@@ -280,6 +280,55 @@ public boolean equals(Object obj) {
 - 类重写了 `equals()` ：一般重写 `equals()` 来比较两个对象中的属性是否相等，若它们的属性相等，则返回 `true`（即认为这两个对象相等）
 
   > `String` 中的 `equals()` 是被重写过的，比较的是对象的值
+
+###### `hashCode()` 的作用
+
+`hashCode()` 的作用是获取哈希码（`int` 整数），也称散列码；这个哈希码的作用是确定该对象在哈希表中的索引位置
+
+`hashCode()` 定义在 `JDK` 的 `Object` 类中，这就意味着 `Java` 中任何类中都包含有 `hashCode()` 函数；另外需要注意的是：`Object` 的 `hashCode()` 是本地方法，也就是用 `C` 语言或 `C++` 实现的，该方法通常用来将对象的内存地址转换成整数后返回
+
+```java
+public  native  int  hashCode();
+```
+
+散列表存储的是键值对（`key-value`），它的特点是：能根据 “ 键 ” 快速的检索出对应的 “ 值 ” ，这就利用到了散列码（可以快速找到所需要的对象）
+
+1. 为什么要有 `hashCode` ?
+
+   我们以 “ `HashSet` 如何检查重复 ” 为例来说明为什么要有  `hashCode` ：
+
+   当把对象加入 `HashSet` 时，`HashSet` 会先计算对象的 `hashCode` 值来判断对象加入的位置，同时也会与其他已经加入的对象的 `hashCode` 值做比较，如果没有相符的 `hashCode`，`HashSet` 会假设对象没有重复出现；但如果发现有相同 `hashCode` 值的对象，这时会调用 `equals()` 来检查 `hashCode` 相等的对象是否真的相同；如果两者相同，`HashSet` 就不会让其加入操作成功；如果不同的话，就会重新散列到其他位置；这样就大大减少了 `equals` 的次数，相应就大大提高了执行速度
+
+2. `hashCode()` 和 `equals()` 都是用于比较两个对象是否相等，那为什么 `JDK` 还要提供这两个方法呢？
+
+   这是因为在一些容器中（比如 `HashMap`、`HashSet`）中，有了 `hashCode()` 之后，判断元素是否在对应的容器中的效率会更高（参考添加元素进 HashSet 的过程）；如果 `HashSet` 在对比的时候，同样的 `hashCode` 有多个对象，它会继续使用 `equals()` 来判断是否真的相同，也就是说：`hashCode` 帮助我们大大缩小了查找成本
+
+3. 那为什么不只提供 `hashCode()` ？
+
+   因为两个对象的 `hashCode` 值相等并不代表两个对象就相等
+
+4. 为什么两个对象有相同的 `hashCode` 值，它们也不一定相等 ？
+
+   因为 `hashCode()` 所使用的哈希算法也许刚好会让多个对象传回相同的哈希值；越糟糕的哈希算法越容易碰撞，但这也与数据值域分布的特性有关（所谓哈希碰撞也就是指的是不同的对象得到相同的 `hashCode`）
+
+   总结：
+
+   - 如果两个对象的 `hashCode` 值相等，那这两个对象不一定相等（哈希碰撞）
+   - 如果两个对象的 `hashCode` 值相等并且 `equals()` 也返回 `true`，我们才认为这两个对象相等
+   - 如果两个对象的 `hashCode` 值不相等，我们就可以直接认为这两个对象不相等
+
+5. 为什么重写 `equals()` 时必须重写 `hashCode()` 方法？
+
+   因为两个相等的对象的 `hashCode` 值必须相等，也就是说如果 `equals()` 判断两个对象是相等的，那这两个对象的 `hashCode` 值也要相等
+
+   如果重写 `equals()` 时没有重写 `hashCode()` 的话就可能会导致 `equals()` 判断是相等的两个对象，`hashCode` 值却不相等
+
+   总结：
+
+   - `equals()` 判断两个对象是相等的，那这两个对象的 `hashCode` 值也要相等
+   - 两个对象有相同的 `hashCode` 值，它们也不一定相等（哈希碰撞）
+
+
 
 ##### 包装类
 
@@ -398,7 +447,7 @@ double value = Double.parseDouble(str);
 
 `Java` 中的时间使用标准类库的 `Date` 类表示，使用距离一个固定时间点毫秒数（可正可负，long 类型）表达一个特定的时间点；固定的时间点称为纪元（`epoch`），是 UTC 时间 1970 年 1 月 1 日 00:00:00 ；`UTC`（`Universal Time Coordinate` 世界调整时间）与 `GMT` （`Greenwich Mean Time` 格林威治时间）一样，是一种具有实际目的的科学标准时间
 
-`Date` 类：`java.util.Date` 类封装日期及时间信息；Date 类大多数用于时间分量计算的方法已经被 `Calendar` 取代
+`Date` 类：`java.util.Date` 类封装日期及时间信息；`Date` 类大多数用于时间分量计算的方法已经被 `Calendar` 取代
 
 - `long  getTime()` ：获取距离纪元至今所经历的毫秒数
 - `void  setTime(Long time)` ：将传入的距离纪元至今所经历的毫秒数转换为对应的时间赋给 `date` 对象
@@ -707,7 +756,7 @@ for (String str : c1) {
      String[] strarr3 = list.toArray(new String[4]);		// [a,b,c,null]
      ```
 
-2. 数组转换为 `List` ：Arrays 类中提供有个静态方法 asList() ，使用该方法可以将一个数组转换成对应的 List 集合
+2. 数组转换为 `List` ：`Arrays` 类中提供有个静态方法 `asList()` ，使用该方法可以将一个数组转换成对应的 `List` 集合
 
    - `static  <T>List<T>  asList<T...a>` ：返回的 List 的集合类型由传入的数组的元素类型决定；要注意的是：返回的集合不能对其增删元素，否则会抛出异常，并且对集合的元素进行修改会影响数组对应的元素
 
@@ -829,7 +878,7 @@ System.out.println(stack);    // []
   System.out.println(map.containsKey(2));	  // true
   ```
 
-hashcode 方法 ：返回该对象所在内存地址的整数形式
+`hashcode` 方法 ：返回该对象所在内存地址的整数形式
 
 - 重写 `hashCode()` 需要注意两点：
   1. 与 `equals()` 的一致性，即 `equals` 比较返回 `true` 的两个对象其 `hashCode()` 的返回值应该相同
