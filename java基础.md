@@ -4,7 +4,7 @@
 
 - JVM：java虚拟机，保证java语言跨平台
 
-- JRE：java程序的运行环境。包括JVM和核心类库
+- xxxxxxxxxx7 1FileInputStream fis = new FileInputStream("Hello.txt");2FileOutputStream fos = new FileOutputStream(new File("hello_copy.txt"));3byte[] bytes = new byte[1024];4int num;5while ((num = fis.read(bytes)) > 0){6    fos.write(bytes,0,num);7}java
 
 - JDK：java开发环境。包括JRE和开发工具（javac，java）
 

@@ -487,3 +487,949 @@ try {
 
 - `throws` 额外的异常
 - `throws` 父类方法中抛出异常的父类异常
+
+以上针对受检异常，可以随意抛出运行时异常（`RuntimeException` 及其子类）
+
+`Java` 异常可以分为检测异常，非检测异常
+
+- 检测异常：可检测异常编译器验证，对于声明抛出异常的任何方法，编译器将强制处理或声明规则，不捕捉这个异常，编译器就通不过，不允许编译
+- 非检测异常：非检测异常不遵循处理或者声明规则，在产生此类异常时，不一定非要采取任何适当操作，编译器不会检查是否已经解决了这样一个异常
+
+`RuntimeException` 类属于非检测异常，因为 `JVM` 操作引起的运行时异常随时可能发生，此类异常一般是由特定的操作引起，但这些操作在 `Java` 应用程序中会频繁出现，因此它们不受编译器检查与处理或声明规则的限制
+
+###### `Throwable` 类的常用方法
+
+- `void  printStackTrace()` ：输出错误信息，用来跟踪异常事件发生时执行的堆栈内容（打印 `Throwable` 对象封装的异常信息）
+- `String  getMessage()` ：返回异常发生时的简要描述
+- `String  toString()`：返回异常发生时的详细信息
+- `String  getLocalizedMessage()` ：返回异常对象的本地化信息；使用 Throwable 的子类覆盖这个方法，可以生成本地化信息，如果子类没有覆盖该方法，则该方法返回的信息与 `getMessage()` 返回的结果相同
+- `Throwable  getCause()` ：获取该异常出现的原因；很多时候，当一个异常导致异常而被抛出的时候，`Java` 库和开放源代码会将一种异常包装成另一种异常，这时，日志记录和打印根异常就变得非常重要；`Java` 异常类提供 `getCause()` 来检索导致异常的原因，这些可以对异常根层次的原因提供更多的信息，该 `Java` 实际对代码的调试或故障排除有很大的帮助
+
+###### 异常
+
+<img src="E:\github\note_imgs\Throwable.png" style="zoom: 80%;" />
+
+**`Exception` 和 `Error` 的区别**
+
+在 `Java` 中，所有的异常都有一个共同的祖先：`java.lang` 包中的 `Throwable` 类，`Throwable` 类有两个重要的子类：
+
+- `Exception` ：程序本身可以处理的异常，可以通过 `catch` 来进行捕获；`Exception` 又可以分为 `Checked Exception`（受检查异常，必须处理）和 `Unchecked Exception`（不受检查异常，可以不处理）
+- `Error` ：`Error` 属于程序无法处理的错误，~~我们没办法通过 `catch` 来进行捕获~~ 不建议通过 `catch` 捕获；例如 `Java` 虚拟机运行错误（`Virtual MachineError`）、虚拟机内存不够错误（`OutOfMemoryError`）、类定义错误（`NoClassDefFoundError`）等，这些异常发生时，`Java`虚拟机（`JVM`）一般会选择线程终止
+
+`Checked Exception` 和 `Unchecked Exception` 的区别
+
+- `Checked Exception` 即受检查异常，`Java` 代码在编译过程中，如果受检查异常没有被 `catch` 或者 `throws` 关键字处理的话，就没办法通过编译
+
+  除了 `RuntimeException` 及其子类以外，其他的 `Exception` 类及其子类都属于受检查异常；常见的受检查异常有：`IO` 相关的异常、`ClassNotFoundException`、`SQLException` ...
+
+- `Unchecked Exception` 即不受检查异常，`Java` 代码在编译过程中，我们即使不处理不受检查异常以可以正常通过编译
+
+  `RuntimeException` 及其子类都统称为非受检查异常，常见的有：
+
+  - `NullPointerException`（空指针错误）
+  - `IllegalArgumentException`（参数错误比如方法入参类型错误）
+  - `NumberFormatException`（字符串转换为数字格式错误，`IllegalArgumentException`的子类）
+  - `ArrayIndexOutOfBoundsException`（数组越界错误）
+  - `ClassCastException`（类型转换错误）
+  - `ArithmeticException`（算术错误）
+  - `SecurityException` （安全错误比如权限不够）
+  - `UnsupportedOperationException`（不支持的操作错误比如重复创建同一用户）
+  - `...` 
+
+###### `try-catch-finally`
+
+- `try` 块 ：用于捕获异常；其后可接零个或多个 `catch` 块，如果没有 `catch` 块，则必须跟一个 `finally` 块
+- `catch` 块 ：用于处理 `try` 捕获到的异常
+- `finally` 块 ：无论是否捕获或处理异常，`finally` 块里的语句都会被执行；当在 `try` 块或 `catch` 块中遇到 `return` 语句时，`finally` 语句块将在方法返回之前被执行
+
+**注意：不要在 `finally` 语句块中使用 `return` ！ **当 `try` 语句和 `finally` 语句中都有 `return` 语句时，`try` 语句块中的 `return` 语句会被忽略，这是因为 `try` 语句中的 `return` 返回值会先被暂存一个本地变量中，当执行到 `finally` 语句中的 `return` 之后，这个本地变量的值就变为了 `finally` 语句中的 `return` 返回值
+
+```java
+public static void main(String[] args) {
+    System.out.println(f(2));   // 输出 0
+}
+
+public static int f(int value) {
+    try {
+        return value * value;
+    } finally {
+        if (value == 2) {
+            return 0;
+        }
+    }
+}
+```
+
+###### `finally` 中的代码一定会执行吗 ？
+
+不一定的，在某些情况下，`finally` 中的代码不会被执行；就比如说 `finally` 之前虚拟机被终止运行的话，`finally` 中的代码就不会被执行
+
+```java
+try {
+	throw new RuntimeException();
+} catch (Exception e) {
+    System.out.println(e.getMessage());
+    System.exit(1);
+} finally {
+    System.out.println("hello")  // 不会输出
+}
+```
+
+另外，在以下 2 种特殊情况下，`finally` 块的代码也不会被执行
+
+1. 程序所在的线程死亡
+2. 关闭 `CPU`
+
+###### 如何使用 `try-with-resources` ?
+
+1. 适用范围（资源的定义）：任何实现 `java.lang.AutoCloseable` 或者 `java.io.Closeable` 的对象
+2. 关闭资源和 finally 块的执行顺序：在 `try-with-resources` 语句中，任何 `catch` 或 `finally` 块在声明的资源关闭后运行
+
+《Effective Java》中明确指出：
+
+> 面对必须要关闭的资源，我们总是应该优先使用 `try-with-resources` 而不是 `try-finally` ；随之产生的代码更短简，更清晰，产生的异常对我们也更有用；`try-with-resources` 语句让我们更容易编写必须关闭的资源的代码，若采用 `try-finally` 则几乎做不到这点
+
+`Java` 中类似于 `InputStream`、`OutputStream`、`Scanner`、`PrintWriter` 等的资源都需要我们调用 `close()` 来手动关闭，一般情况下我们都是通过 `try-catch-finally` 语句来实现这个需求，如下：
+
+```java
+//读取文本文件的内容
+Scanner scanner = null;
+try {
+    scanner = new Scanner(new File("D:\\read.txt"));
+    while (scanner.hasNext()) {
+        System.out.println(scanner.nextLine());
+    }
+} catch (FileNotFoundException e) {
+    e.printStackTrace();
+} finally {
+    if (scanner != null) {
+        scanner.close();
+    }
+}
+```
+
+使用 Java 7 之后的 `try-with-resources` 语句改造上面的代码：
+
+```java
+try (Scanner scanner = new Scanner(new File("test.txt"))) {
+    while (scanner.hasNext()) {
+        System.out.println(scanner.nextLine());
+    }
+} catch (FileNotFoundException e) {
+    e.printStackTrace();
+}
+```
+
+当多个资源需要关闭的时候，使用 `try-with-resources` 实现起来也非常简单，如果还用`try-catch-finally` 可能会带来很多问题
+
+通过使用分号分隔，可以在 `try-with-resources` 块中声明多个资源
+
+```java
+try (BufferedInputStream bin = new BufferedInputStream(new FileInputStream(new File("test.txt")));
+     BufferedOutputStream bout = new BufferedOutputStream(new FileOutputStream(new File("out.txt")))) {
+    int b;
+    while ((b = bin.read()) != -1) {
+        bout.write(b);
+    }
+}
+catch (IOException e) {
+    e.printStackTrace();
+}
+```
+
+###### 使用异常需要注意的地方
+
+- 不要把异常定义为静态变量，因为这样会导致异常栈信息错乱；每次手动抛出异常，我们都需要手动 `new` 一个异常对象抛出
+- 抛出的异常信息一定要有意义
+- 建议抛出更加具体的异常，比如字符串转换为数字格式错误的时候应该抛出 `NumberFormatException` 而不是其父类 `IllegalArgumentException`
+- 使用日志打印异常之后就不要再抛出异常了（两者不要同时存在一段代码逻辑中）
+- `...` 
+
+#### 多线程
+
+什么是进程？
+
+进程是操作系统中运行的一个任务；进程（`process`）是一块包含了某些资源的内存区域，操作系统利用进程把它的工作划分为一些功能单元；进程中所包含的一个或多个执行单元称为线程（`thread`），进程还拥有一个私有的虚拟地址空间，该空间仅能被它所包含的线程访问；线程只能归属于一个进程并且它只能访问该进程所拥有的资源，当操作系统创建一个进程后，该进程会自动申请一个名为主线程或首要线程的线程
+
+什么是线程？
+
+一个线程是进程的一个顺序执行流；同类的多个线程共享一块内存空间和一组系统资源，线程本身有一个供程序执行时的堆栈；线程在切换时负荷小，因此，线程被称为轻负荷进程，一个进程中可以包含多个线程
+
+线程与进程的区别？
+
+- 一个进程至少有一个线程
+
+- 线程的划分尺度小于进程，使得多线程程序的并发性高，另外，进程在执行过程中拥有独立的内存单元，而多个线程共享内存，从而极大的提高了程序的运行效率
+
+- 线程在执行过程中与进程的区别在于每个独立的线程有一个程序运行的入口，顺序执行序列和程序的出口；但是线程不能够独立运行，不许依存在应用程序中，由应用程序提供多个线程的执行控制
+
+- 从逻辑角度来看，多线程的意义在于一个应用程序中，有多个执行部分可以同时执行，但操作系统并没有将多个线程看做多个独立的应用来实现进程的调度和管理以及资源分配
+
+###### 创建线程
+
+`Thread` 类是线程类，其每一个实例表示一个可以并发运行的线程，我们可以通过继承该类并重写 `run()` 来定义一个具体的线程，其中重写 `run()` 的目的是定义该线程要执行的逻辑；启动线程是调用线程的 `start()` 而非直接调用 `run()` 方法，`start()` 会将当前线程纳入线程调度，使当前线程可以开始并发运行；当线程获取时间片段后自动开始执行 `run()` 中的逻辑
+
+
+```java
+public class MyThread extends Thread {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(i);
+        }
+    }
+}
+
+
+public class ThreadTest {
+    public static void main(String[] args) {
+        // 此时的线程处于 new 状态，处于该状态的线程无法获取 CPU 分配的时间片资源，不会运行
+        Thread thread1 = new MyThread();
+        Thread thread2 = new MyThread();
+        // 将 new 状态变为可执行状态
+        thread1.start();
+        thread2.start();
+    }
+}
+```
+
+使用 `Runnable` 创建并启动线程
+
+实现 `Runnable` 接口并重写 `run` 方法来定义线程体，然后再创建线程的时候将 `Runnable` 的实例传入并启动线程；这样做的好处在于可以将线程与线程要执行的任务分离开，减少耦合；同时 `Java` 是单继承的，定义一个类实现 `Runnable` 接口这样的做法可以更好的去实现其他父类或接口，因为接口可以多继承
+
+```java
+public class RunnableTest implements Runnable{
+    public static void main(String[] args) {
+        Runnable r = new RunnableTest();
+        Thread t = new Thread(r);
+        t.start();
+//        new Thread(new RunnableTest()).start();
+    }
+
+    @Override
+    public void run() {
+        System.out.println("hello");
+    }
+}
+```
+
+通常我们可以通过匿名内部类的方式创建线程，使用该方式可以简化编写代码的复杂度，当一个线程仅需要一个实例时我们可以通过这种方式来创建
+
+线程通常用于在一个程序中需要同时完成多个任务的情况，我们可以将每个任务单行为一个线程，使它们得以一同工作
+
+**并发**
+
+多个线程 “ 同时 ” 运行只是我们感官上的一种表现，事实上线程是并发运行的，`OS` 将时间划分为很多时间片段（时间片），尽可能均匀分配给每一个线程，获取时间片段的线程被 `CPU` 运行，而其他线程全部等待，所以微观上是走走停停的，宏观上是都在运行，这种现象叫并发，但不是绝对意义上的 “ 同时发生 ” 
+
+<img src=".\note_imgs\ThreadStatus.png" style="zoom:80%;" />
+
+###### **线程操作 `API`**
+
+- `static  Thread  currentThread()` ：用于获取运行当前代码片段的线程
+
+  ```java
+  public static void testCurrent() {
+      System.out.println("testCurrent" + Thread.currentThread());
+  }
+  
+  public static void main(String[] args){
+      System.out.println("main" + Thread.currentThread());
+      testCurrent();
+      new Thread(){
+          @Override
+          public void run() {
+              System.out.println("new Thread" + Thread.currentThread());
+              testCurrent();
+          }
+      }.start();
+  }
+  ```
+
+- `long  getId()` ：返回该线程的标识符
+
+- `String  getName()` ：返回该线程的名称
+
+- `int  getPriority()` ：返回线程的优先级
+
+- `Thread.state  getState()` ：获取线程的状态
+
+- `boolean  isAlive()` ：测试线程是否处于活动状态
+
+- `boolean  isDaemon()` ：测试线程是否为守护线程
+
+- `boolean  isInterrupted()` ：测试线程是否已经中断
+
+  ```java
+  Thread thread = new Thread("hello");
+  thread.setPriority(Thread.MAX_PRIORITY);
+  System.out.println(thread.getPriority()); 
+  System.out.println(thread.getName());	// hellp
+  System.out.println(thread.getId());		// 16
+  ```
+
+###### 线程的优先级
+
+线程的切换是由线程调用控制的，我们无法通过代码来进行干涉，但是我们可以通过提高线程的优先级来最大程度的改善线程获取时间片的记录
+
+线程的优先级被划分 `10` 级，值分别是 `1 - 10` ，其中 `1` 最低，`10` 最高，线程提供 `3` 个常量来表示最低、最高、默认的优先级以及一个方法设置线程的优先级：
+
+- `Thread.MIN_PRIORITY` ：`1`
+- `Thread.MAX_PRIORITY` ：`10`
+- `Thread.NORM_PRIORITY` ：`5`
+- `void  setPriority()` ：设置线程的优先级
+
+###### 守护线程
+
+守护线程与普通线程在表现上没有什么区别，我们只需要通过 `Thread` 提供的方法来设定即可；守护线程的特点是：**当线程中只剩下守护线程时，所有守护线程强制终止**；垃圾回收机制（`GC`）就是运行在一个守护线程上
+
+- `void  setDaemon(boolean on)` ：当参数为 `true` 时，该线程为守护线程
+
+  ```java
+      public static void main(String[] args) throws InterruptedException {
+          // 每 0.1 秒输出一个 hello
+          Thread t = new Thread(){
+              @Override
+              public void run() {
+                  while (true) {
+                      try {
+                          sleep(100);
+                      } catch (InterruptedException e) {
+                          e.printStackTrace();
+                      }
+                      System.out.println("hello");
+                  }
+              }
+          };
+          // 设置线程 t 为守护线程，如果不设置程序在 5 秒后不会停止，线程 t 会继续运行
+          t.setDaemon(true);
+          t.start();
+          Thread.currentThread().sleep(5000);
+          System.out.println("over");
+      }
+  ```
+
+`sleep()` ： `Thread` 的静态方法 `sleep()` 用于使当前线程进入阻塞状态
+
+- `static  void  sleep(long ms)` ：该方法会使当前线程进入阻塞状态指定毫秒，当阻塞指定毫秒后，当前线程会重新进入 `Runable` 状态，等待分配时间片（阻塞状态下，`OS` 不再分配时间片资源）；该方法会抛出 `InterruptedException`，使用该方法需要捕获这个异常
+
+  关于 `InterruptedException` ：假如有个方法调用线程 `t` ，并使它阻塞 5 秒，在这 5 秒内，有另一个方法调用线程 `t` ，运行 `t.interrupt()` ，这时线程 t 以抛出异常  `InterruptedException` 来让自己提前结束阻塞
+
+- `TimeUnit.SECONDS.sleep(1);` ：阻塞 1 秒
+
+  ```java
+  public static void main(String[] args) {
+      Thread t = new Thread(){
+          @Override
+          public void run() {
+              System.out.println("start");
+              try {
+                  TimeUnit.SECONDS.sleep(10000);
+              } catch (InterruptedException e) {
+                  System.out.println("被中断了");
+              }
+              System.out.println("end");
+          }
+      };
+      t.start();
+      t.interrupt();    
+  }
+  
+  输出：
+  	start
+  	被中断了
+  	end
+  ```
+
+###### `yield()`、`join()`
+
+- `static  void  yield()` ：该方法用于使当前线程主动让出当次 `CPU` 时间片回到 `Runable` 状态，等待分配时间片
+- `void  join()` ：该方法用于等待当前线程结束，会抛出 `InterruptedException`
+
+```java
+public static void main(String[] args) {
+    Thread t1 = new Thread(){
+        @Override
+        public void run() {
+            for (int i = 0; i < 10; i++) {
+                System.out.println("下载" + i + "%");
+                try {
+                    sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("下载完成");
+        }
+    };
+    Thread t2 = new Thread(){
+        @Override
+        public void run() {
+            try {
+                t1.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("打开图片");
+        }
+    };
+    t1.start();
+    t2.start();
+}
+```
+
+###### 线程同步
+
+多个线程并发读写同一个临界资源时会发生 “ 线程并发安全问题 ”
+
+常见的临界资源：
+
+- 多线程共享实例变量
+- 多线程静态公共变量
+
+若想解决多线程安全问题，需要将异步操作变为同步操作
+
+- 异步操作：多线程并发的操作
+- 同步操作：有先后顺序的操作
+
+`synchronized` 关键字是 `Java` 中的同步锁
+
+**锁机制**
+
+`Java` 提供了一种内置的锁机制来支持原子性（指这段代码必须执行完之后才能让其他线程进行访问）
+
+同步代码块（`Synchronized` 关键字），同步代码包含两部分：一个作为锁的对象的引用，一个作为由这个锁保护的代码块
+
+```java
+synchronized(同步监视器--锁对象引用) {
+	// ...
+}
+```
+
+若方法所有代码都需要同步也可以给方法直接加锁；每个 `Java` 对象都可以用作一个实现同步的锁，线程进入同步代码块之前会自动获得锁，并且在退出同步代码块时自动释放锁，而且无论是通过正常途径退出还是通过抛出异常退出都一样，获得内置锁唯一途径就是进入由这个锁保护的同步代码块或者方法
+
+```java
+public class SynchronizedTest extends Thread{
+    public SynchronizesTest(String name) {
+        super(name);
+    }
+
+    static long startTime;
+    static final Object OBJ = new Object();
+
+    @Override
+    public void run() {
+        System.out.println(Thread.currentThread().getName()+ "  " + (System.currentTimeMillis() - startTime));
+        
+        synchronized (SynchronizesTest.OBJ) {
+            System.out.println(Thread.currentThread().getName()+ " 锁住 " + (System.currentTimeMillis() - startTime));
+            try {
+                sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName()+ " 释放 " + (System.currentTimeMillis() - startTime));
+        }
+    }
+
+    public static void main(String[] args) {
+        startTime = System.currentTimeMillis();
+        Thread t1 = new SynchronizesTest("t1");
+        Thread t2 = new SynchronizesTest("t2");
+        t1.start();
+        t2.start();
+    }
+}
+```
+
+选择合适的锁对象：
+
+使用 `synchronized` 需要对一个对象上锁以保证线程同步，那么这个锁对象应该注意：
+
+- 多个需要同步的线程在访问该同步块时，看到的应该是同一个锁对象引用，否则达不到同步效果
+- 通常我们会使用 `this` 来作为锁对象
+
+选择合适的锁范围：
+
+在使用同步块时，应当尽量在允许的情况下减少同步范围，以提高并发的效率
+
+方法锁和静态方法锁
+
+- 方法锁：对象锁（实例锁）；`synchronized` 是对类的当前实例（当前对象）进行加锁，防止其他线程同时访问该类的该实例的所有 `synchronized` 块，每一个对象都有一个锁，且是唯一的
+  - 指的是 “ 类的当前实例 ” ，类的两个不同实例就没有这种约束了
+
+- 静态方法锁：当我们对一个静态方法加锁，如：
+
+  ```java
+  public  synchronized  static  void  fun(){}
+  ```
+
+  那么该方法锁的对象是类对象，每一个类都有唯一的一个类对象，获取类对象的方式：`类名.class` 
+
+  - `static synchronized` 又称为类锁 / 全局锁
+  - 该锁针对的是类，无论实例出多少个对象，那么线程依然共享该锁；`static synchronized`  是限制多个线程中该类的所有实例同时访问该类所对应的代码块
+  - 锁住的只是 `static synchronized` 块，`synchronized` 块锁不住，而不加锁的方法更加锁不住
+
+静态方法与非静态方法同时声明了 `synchronized` ，它们之间是非互斥关系的，原因在于：静态方法锁的是类对象，非静态方法锁的是当前方法所属对象
+
+```java
+public class SynchronizedTwoTest {
+    public static synchronized void test () {
+        System.out.println(Thread.currentThread() + "start");
+        try {
+            sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(Thread.currentThread() + "end");
+    }
+    public static void main(String[] args) {
+        new Thread(){
+            @Override
+            public void run() {
+                SynchronizedTwoTest.test();
+            }
+        }.start();
+        new Thread(){
+            @Override
+            public void run() {
+                SynchronizedTwoTest.test();
+            }
+        }.start();
+    }
+}
+```
+
+###### `wait()` 、`notify()`
+
+多线程之间需要协调工作，例如：浏览器的一个显示图片的 `displayThread` 想要执行显示图片的任务，必须等待下载线程 `downloadThread` 将该图片下载完成，如果图片还没有下载完，`displayThread` 可以暂停，当 `downloadThread` 完成了任务后，在通知 `displayThread` 继续执行；就是说：如果条件不满足，则等待，当条件满足时，等待该条件的线程将被唤醒
+
+在 `Java` 中，这个机制的实现依赖于 `wait() / notify()`，等待机制与锁是密切关联的
+
+`notify()` 和 `notifyAll()`
+
+`notify()` 和 `notifyAll()` 都是用来唤醒调用 wait() 进入等待锁资源队列的线程
+
+- `notify()` ：唤醒正在等待此对象监视器的单个线程，如果有多个线程在等待，则选中其中一个随机唤醒（由调度器决定），唤醒的线程享有公平竞争资源的权利
+- `notifyAll()`：唤醒正在等待此对象监视器的所有线程，唤醒的所有线程公平竞争资源
+
+`wait()`
+
+`wait()` 是 `Object` 类的实例方法，调用 `wait()` 会使得当前线程进入等待状态，只有获取到锁才能调用 `wait()` （在同步块中使用），未获得锁时调用 `wait()` 会抛出异常，等待状态会释放执行 `wait()` 的锁资源（仅限于执行 `wait()` 的锁，其他锁资源并不会释放）
+
+`wait()` 可以设置等待时间，到达时间自动唤醒而不需要 `notify()` 、`notifyAll()`；调用 `wait()` 需要捕获 `InterruptedExcepyion`（避免数据期间设置中断标志）
+
+`wait()` 使用在同步锁保护的同步代码块或者方法内；线程如果调用 `wait()` 方法失去锁资源，而后被其他线程唤醒，如果此时线程没有获取对应的锁资源，即使唤醒也依旧不会执行
+
+实例：
+
+```java
+public class WaitTest {
+    public static void main(String[] args) {
+        Object obj1 = new Object();
+        Object obj2 = new Object();
+        long start = System.currentTimeMillis();
+        Runnable r1 = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("r1 start " + (System.currentTimeMillis() - start));
+                synchronized (obj1) {
+                    System.out.println("r1 getLock 1 " + (System.currentTimeMillis() - start));
+                    synchronized (obj2) {
+                        System.out.println("r1 getLock 2 " + (System.currentTimeMillis() - start));
+                        try {
+                            sleep(2000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        obj1.notifyAll(); // 将所有等待 obj1 的线程唤醒
+                        System.out.println("r1 开始等待 " + (System.currentTimeMillis() - start));
+                        try {
+                            obj1.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        System.out.println("r1 等待结束 " + (System.currentTimeMillis() - start));
+                        obj1.notifyAll();
+                    }
+                    System.out.println("r1 已释放 lock 2 " + (System.currentTimeMillis() - start));
+                }
+                System.out.println("r1 已释放 lock 1 " + (System.currentTimeMillis() - start));
+            }
+        };
+        Runnable r2 = new Runnable(){
+            @Override
+            public void run() {
+                System.out.println("r2 start " + (System.currentTimeMillis() - start));
+                synchronized (obj1) {
+                    System.out.println("r2 get lock 1" + (System.currentTimeMillis() - start));
+                    System.out.println("r2 sleep 2s");
+                    try {
+                        sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    obj1.notifyAll();
+                    System.out.println("r2 开始等待" +  (System.currentTimeMillis() - start));
+                    try {
+                        obj1.wait(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("r2 等待结束"+  (System.currentTimeMillis() - start));
+                    obj1.notifyAll();
+                }
+            }
+        };
+        Runnable r3 = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("r3 start " + (System.currentTimeMillis() - start));
+                try {
+                    sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                synchronized (obj2) {
+                    System.out.println("r3 get lock 2" + +  (System.currentTimeMillis() - start));
+                }
+                System.out.println("r3 已释放 lock3" +   (System.currentTimeMillis() - start));
+            }
+        };
+        new Thread(r1).start();
+        new Thread(r2).start();
+        new Thread(r3).start();
+    }
+}
+```
+
+输出：
+
+```
+r2 start 9
+r1 start 9
+r3 start 9
+r2 get lock 114
+r2 sleep 2s
+r3 get lock 22015
+r2 开始等待2015
+r3 已释放 lock32015
+r1 getLock 1 2015
+r1 getLock 2 2015
+r1 开始等待 4028
+r2 等待结束4028
+r1 等待结束 4028
+r1 已释放 lock 2 4028
+r1 已释放 lock 1 4028
+```
+
+###### `volatile`
+
+`Java` 提供了一种稍弱的同步机制，即使用 `volatile` 修饰变量，用来确保变量的更新操作实时通知到其他线程
+
+```java
+public class VolatileTest {
+    // volatile 修饰使得线程每次获取时间片运行的时候都先去主内存中重新获取
+    private volatile static int found = 0;
+    
+    public static void change() {
+        VolatileTest.found = 1;
+    }
+    public static void main(String[] args) {
+        Runnable r1 = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("好累");
+                // 第一次的时候取了 found，后面一直用的都是线程副本中的 found
+                while (found == 0) {
+
+                }
+                System.out.println("睡觉");
+            }
+        };
+        Runnable r2 = new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("还有一小时");
+                try {
+                    sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("change");
+                change();
+                System.out.println("跳过一小时");
+            }
+        };
+        new Thread(r1).start();
+        new Thread(r2).start();
+    }
+}
+```
+
+代码的解析：
+
+<img src="E:\github\note_imgs\volatile.png" style="zoom: 50%;" />
+
+- `found` 变量是多线程之间共享的，每次修改都会同步带主内存中
+- 每个线程运行的时候都只会读取一次
+- 加了 `volatile` 每次运行的时候都会从主内存读取一次
+
+`volatile` 和 `synchronized` 的区别
+
+1. `volatile` 是轻量级，只能修饰变量；`synchronized` 是重量级的，还可以修饰方法
+2. `volatile` 只能保证数据的可见性，不能用了同步，因为多个线程并发访问 `volatile` 修饰的变量不会发生阻塞；`synchronized` 即可以保证可见性，同时可以保证原子性，因为只有获取了锁的线程才能进入临界区，从而保证临界区所有的语句都全部执行，多个线程争夺 `synchronized` 锁对象时，会出现线程阻塞，所以在适当的时候使用 `volatile` 可以提高线程执行的效率
+
+公平锁与非公平锁
+
+- 非公平锁：每个线程获取锁的机会是不平等的，常见的非公平锁：`synchronized`、`ReentrantLock(false)`
+- 公平锁：每个线程获取锁的机会是平等的，常见的公平锁对象：`ReentrantLock(true)`
+
+```java
+public class SyncTest {
+    public static void main(String[] args) {
+        Task task = new Task();
+        Thread t1 = new Thread(task,"线程一");
+        Thread t2 = new Thread(task,"线程二");
+        Thread t3 = new Thread(task,"线程三");
+
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+}
+class Task implements Runnable {
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (this) {
+                System.out.println(Thread.currentThread().getName());
+            }
+        }
+    }
+}
+```
+
+使用 `ReentrantLock(true)` 重写类 `Task`
+
+```java
+class Task implements Runnable {
+    Lock lock = new ReentrantLock(true);
+    @Override
+    public void run() {
+        while (true) {
+            lock.lock();
+            try {
+                System.out.println(Thread.currentThread().getName());
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+}
+```
+
+此时输出：
+
+```
+线程三
+线程二
+线程一
+线程三
+线程二
+线程一
+...
+```
+
+###### 读写锁
+
+独占锁（写锁）/ 共享锁（读锁）
+
+- 独占锁：指该锁一次只能被一个线程锁持有，对于 `ReentrantLock` 和 `Synchronized` 而言都是独占锁
+- 共享锁：指该锁可以被多个线程持有
+
+为什么会有读锁和写锁？
+
+原理我们使用 `ReentrantLock` 和 `Synchronized` 创建锁的时候，均是独占锁，也就是说一次只能一个线程访问，但是如果我们的业务有一个读写分离场景，读的时候可以让多人同时进行，这样的话原先的独占锁并发性就显得比较差了，而我们读业务并不会造成数据不一致问题，所以应该建议多人可以一起读
+
+```java
+public class CacheTest {
+        private volatile Map<String,Object> map = new HashMap<String,Object>();
+        public void put(String key, Object value) {
+            System.out.println(Thread.currentThread().getName() + " 正在写入 ");
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            map.put(key, value);
+            System.out.println(Thread.currentThread().getName() + " 写入完成");
+        }
+        public Object get(String key) {
+            System.out.println(Thread.currentThread().getName() + " 开始读取");
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName() + " 读取完毕");
+            return map.get(key);
+        }
+}
+class ReaderWriterLock {
+    public static void main(String[] args) {
+        CacheTest ct = new CacheTest();
+        // 模拟多线程同时进行读写
+        for (int i = 1;i < 5;i++) {
+            // 当存在大量线程的情况下，启动线程的时间很短，启动了不代表线程执行完结束了
+            // 因此线程本身生命周期还没有结束，而 for 循环定义的临时变量生命周期可能结束了
+            // 当线程里面使用这个变量的时候再来访问就会出错
+            int finalI = i;
+            // 这样 final 修饰更好，相当于加了锁，用起来更加安全，本质防止多核 cpu 共同操作该线程锁引发的不安全性
+            new Thread() {
+                @Override
+                public void run() {
+                    ct.put(finalI + "",finalI + "");
+                }
+            }.start();
+        }
+        for (int i = 0; i <5;i++) {
+            int finalI = i;
+            new Thread() {
+                @Override
+                public void run() {
+                    ct.get(finalI +"");
+                }
+            }.start();
+        }
+    }
+}
+```
+
+输出：
+
+```
+Thread-1 正在写入 
+Thread-3 正在写入 
+Thread-2 正在写入 
+Thread-0 正在写入 
+Thread-5 开始读取
+Thread-8 开始读取
+Thread-4 开始读取
+Thread-7 开始读取
+Thread-6 开始读取
+Thread-1 写入完成
+Thread-3 写入完成
+Thread-7 读取完毕
+Thread-8 读取完毕
+Thread-5 读取完毕
+Thread-4 读取完毕
+Thread-0 写入完成
+Thread-6 读取完毕
+Thread-2 写入完成
+```
+
+从得到的结果来看，写入的时候，写操作可以被其他线程打断，这就造成了写操作还没完，读操作又开始了，数据量一旦变大很有可能造成读取 null 值的现象
+
+解决方案：为上述代码添加读写锁（`ReentrantReadWriteLock`）
+
+- `ReentrantReadWriteLock lock = new ReentrantReadWriteLock();` ：创建读写锁
+- `lock.writeLock().lock();` ：创建一个写锁
+- `lock.writeLock().unlock();` ：释放写锁
+- `lock.readLock().lock();` ：创建一个读锁
+- `lock.readLock().unlock();` ：释放锁写
+
+读写锁：多个线程同时读一个资源类是没有问题的，所以为了满足并发量，读取共享资源应该同时进行；但是如果一个线程想要去写共享资源，就不应该再有其他线程可以对该资源进行读或写
+
+```java
+public class CacheTest {
+        private volatile Map<String,Object> map = new HashMap<String,Object>();
+        ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
+        public void put(String key, Object value) {
+            rwLock.writeLock().lock();
+            try {
+                System.out.println(Thread.currentThread().getName() + " 正在写入 ");
+                sleep(500);
+                map.put(key, value);
+                System.out.println(Thread.currentThread().getName() + " 写入完成");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                rwLock.writeLock().unlock();
+            }
+        }
+        public Object get(String key) {
+            rwLock.readLock().lock();
+            try {
+                System.out.println(Thread.currentThread().getName() + " 开始读取");
+                sleep(500);
+                System.out.println(Thread.currentThread().getName() + " 读取完毕");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                rwLock.readLock().unlock();
+            }
+            return map.get(key);
+        }
+}
+```
+
+输出：
+
+```
+Thread-2 正在写入 
+Thread-2 写入完成
+Thread-3 正在写入 
+Thread-3 写入完成
+Thread-1 正在写入 
+Thread-1 写入完成
+Thread-0 正在写入 
+Thread-0 写入完成
+Thread-6 开始读取
+Thread-8 开始读取
+Thread-4 开始读取
+Thread-5 开始读取
+Thread-7 开始读取
+Thread-6 读取完毕
+Thread-8 读取完毕
+Thread-7 读取完毕
+Thread-5 读取完毕
+Thread-4 读取完毕
+```
+
+从运行结构我们看出，写入操作是一个一个的线程进行执行的，并且中间不会被打断，而读操作的时候是 5 个线程同时进行的，然后并发读取
+
+线程进入读锁的前提条件：
+
+1. 没有进入线程的写锁
+2. 没有写请求或有写请求，但调用线程和持有锁的线程是同一个
+
+线程进入写锁的前提条件：
+
+1. 没有其他线程的读锁
+2. 没有其他线程的写锁
+
+#### 高并发
+
+
+
+#### `TCP`通信
+
+`Socket` 简介
+
+`socket` 通常称作 “ 套接字 ” ，用于描述 `IP` 地址和端口，是一个通信链句柄；在 `Internet` 上的主机一般运行了多个服务软件，同时提供几种服务，每种服务都打开了一个 `socket`，并绑定了一个端口上，不同的端口对应不同的服务
+
+应用程序通常通过 “ 套接字 ” 向网络发送请求，或者应答网络请求，`Socket` 和 `ServerSocket` 类位于 `java.net` 包中，`ServerSocket` 用于服务端，`Socket` 是建立网络连接时使用的，在连接成功时，应用程序两端都会产生一个 `Socket` 示例，操作这个示例，完成所需要的会话
+
+`java.net.Socket` 为套接字类，其提供了很多方法：
+
+- `int  getLocalPort()` ：获取本地使用的端口号
+- `InetAddress  getLocalAddress()` ：获取套接字绑定的本地地址
+- 使用 `InetAddress` 表示本机地址
+  - `String  getCanonicalHostName()` ：获取此 `IP` 地址的完全限定域名
+  - `String  getHostAddress()` ：返回 `IP` 地址字符串（以文本表现形式）
+
+- 通过 Socket 获取远端的地址以及端口号
+  - `int  getPost()` ：获取远端使用的端口号
+  - `InetAddress  getIntAddress()` ：获取套接字绑定的远端地址
+
+<img src=".\note_imgs\tcp01.png" style="zoom: 67%;" />
