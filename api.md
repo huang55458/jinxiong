@@ -5,7 +5,8 @@
    - `public  String(String original)` ：把字符串转成字符串
    - `public  String(char[] value)` ：把字符数组转成字符串
    - `public  String(char[] value,int index,int count)` ：把字符数组的一部分转成字符串
-   - `public  String(byte[] )` ：把字符串转成字符串
+   - `public  String(byte[] bytes)` ：把字节数组转成字符串
+   - `public  String(byte[] bytes,int index,int length)` ：把字节数组中的一部分转成字符串
 1. 常用功能：
    1. 判断功能
       - `boolean  equals(Object obj)` ：比较字符串的内容是否相同，严格区分大小写
