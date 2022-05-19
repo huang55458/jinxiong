@@ -1,4 +1,4 @@
-##### `RandomAccessFile`
+##### ` RandomAccessFile`
 
 `Java` 提供了一个可以对文件随机访问的操作，访问包括读和写操作，该类名为 `RandomAccessFile`，该类的读写是基于指针的操作
 
@@ -1408,17 +1408,184 @@ Thread-4 读取完毕
 1. 没有其他线程的读锁
 2. 没有其他线程的写锁
 
+###### 线程池
+
+线程池的概念：在实际项目中专门用于管理线程的数量，生命周期，创建策略等一系列特性的角色
+
+使用 `ExecutorService` 实现线程池
+
+线程池有两个主要作用：
+
+1. 控制线程数量
+2. 重用线程
+
+当一个程序中若创建大量线程，并在任务结束后销毁会给系统带来过度消耗资源，以及过度切换线程的危险，从而可能导致系统崩溃，为此我们应使用线程池来解决这个问题
+
+线程池的概念：首先创建一些线程，它们的集合称为线程池，当服务器收到一个客户请求后，就从线程池中取出一个空闲的线程为之服务，服务完后不关闭该线程池而是将线程还回到线程池；在线程池的编辑模式下，任务是提交给整个线程池，而不是直接交给某个线程，线程池在拿到任务后，它就在内部找有无空闲的线程，再把任务交给某个空闲的线程；一个线程同时只能执行一个任务，但可以同时向一个线程池提交多个任务
+
+线程池有以下几种实现策略：
+
+- `Executors.newCachedThreadPool()` ：创建一个可根据需要创建新线程的线程池，但是在以前构造的线程可用时将重用它们
+- `Executors.newFixedThreadPool(int Threads)` ：创建一个可重用固定线程集合的线程池，以共享的无界队列来运行这些线程
+
+```java
+public class TestExecutorService {
+    public static void main(String[] args) {
+        ExecutorService threadPool = Executors.newFixedThreadPool(5);
+        for (int i = 0; i < 5; i++) {
+            Handler handler = new Handler();
+            threadPool.execute(handler);
+        }
+        threadPool.shutdownNow();
+    }
+}
+class Handler implements Runnable {
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++) {
+            System.out.println(Thread.currentThread().getName() + "  " + i);
+            try {
+                sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+输出：
+
+```
+pool-1-thread-3  0
+pool-1-thread-4  0
+pool-1-thread-1  0
+pool-1-thread-2  0
+pool-1-thread-5  0
+...
+```
+
+实际开发中并不建议使用这种便捷方法创建线程池，因为这种方式已经将线程池中各种参数固定了，而别人固定的参数往往并不是最适合我们业务，建议还是使用原生线程池对象  `ThreadPoolExecutor` 创建，根据具体业务需求，指定参数
+
+```java
+public ThreadPoolExecutor(int corePoolSize,
+                          int maximumPoolSize,
+                          long keepAliveTime,
+                          TimeUnit unit,
+                          BlockingQueue<Runnable> workQueue,
+                          RejectedExecutionHandler handler) {
+    this(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue,
+         Executors.defaultThreadFactory(), handler);
+}
+```
+
+- `corePoolSize` ：线程池核心线程数量
+- `maximumPoolSize` ：线程池中最大线程数
+- `keepAliveTime` ：当活跃线程数大于核心线程数时，空闲的多余线程最大存活时间
+- `unit` ：存储时间的单位
+- `workQueue` ：存放任务的队列
+- `handler` ：超过线程范围和队列容器的任务的处理程序
+
+线程池的执行原理
+
+提交一个任务到线程池，线程池的执行流程如下：
+
+1. 判断线程池里的核心线程是否都在执行任务，如果不是（核心线程空闲或者还有信息线程没有创建）则创建一个新的工作线程来执行任务，如果核心线程都在执行任务，进入下个流程
+2. 线程池判断工作队列是否已满，如果工作队列没有满，则将新提交的任务存储在这个工作队列中，如果工作队列满了，则进入下个流程
+3. 判断线程池里的线程是否满了并且都处于工作状态，如果没有则创建一个新的工作线程来执行任务，如果满了则交给饱和策略处理这个任务
+
+<img src=".\note_imgs\ThreadPoolExecutor.png" style="zoom: 80%;" />
+
+```java
+public class ThreadPoolExample implements Runnable{
+    @Override
+    public void run() {
+        try {
+            sleep(500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(3);
+        ThreadPoolExecutor threadPool = new ThreadPoolExecutor(
+                2,
+                5,
+                60,
+                TimeUnit.SECONDS,
+                queue
+        );
+        for (int i = 0; i < 9; i++) {
+            threadPool.execute(new ThreadPoolExample());
+            System.out.println("当前线程池活跃数：" + threadPool.getPoolSize());
+            if (!queue.isEmpty()) {
+                System.out.println("队伍中阻塞的线程数：" + queue.size());
+            }
+        }
+        threadPool.shutdown();
+    }
+}
+```
+
+输出：
+
+```
+当前线程池活跃数：1
+当前线程池活跃数：2
+当前线程池活跃数：2
+队伍中阻塞的线程数：1
+当前线程池活跃数：2
+队伍中阻塞的线程数：2
+当前线程池活跃数：2
+队伍中阻塞的线程数：3
+当前线程池活跃数：3
+队伍中阻塞的线程数：3
+当前线程池活跃数：4
+队伍中阻塞的线程数：3
+当前线程池活跃数：5
+队伍中阻塞的线程数：3
+Exception in thread "main" java.util.concurrent.RejectedExecutionException
+```
+
+线程池的饱和策略
+
+当队列和线程池都满了，说明线程池处于饱和状态，那么必须对新提交的任务采用一种特殊的策略来进行处理，这个策略默认配置是 `AbortPolicy`，表示无法处理新的任务而抛出异常
+
+Java 中提供 4 种策略
+
+- `AbortPolicy` ：直接抛出异常 `RejectedExecutionException`
+- `DisCardOldestPolicy` ：丢弃队首的一个任务，并执行当前任务加入队尾
+- `DiscardPolicy` ：不处理，丢弃掉
+- `CallerRunsPolicy` ：让调用 `execute` 方法的线程执行此 `commond`，会阻塞入口；这个调节机制，不抛弃任务也不抛出异常，而是将某些任务回到调用者本身，让调用者所在的线程去执行
+
+第五种策略：
+
+捕获 `RejectedExecutionException`，然后自己处理该任务
+
+```java
+RejectedExecutionHandler handler = new ThreadPoolExecutor.DiscardPolicy();
+```
+
 #### 高并发
+
+
+
+
+
+
 
 
 
 #### `TCP`通信
 
-`Socket` 简介
+###### `Socket` 
 
 `socket` 通常称作 “ 套接字 ” ，用于描述 `IP` 地址和端口，是一个通信链句柄；在 `Internet` 上的主机一般运行了多个服务软件，同时提供几种服务，每种服务都打开了一个 `socket`，并绑定了一个端口上，不同的端口对应不同的服务
 
 应用程序通常通过 “ 套接字 ” 向网络发送请求，或者应答网络请求，`Socket` 和 `ServerSocket` 类位于 `java.net` 包中，`ServerSocket` 用于服务端，`Socket` 是建立网络连接时使用的，在连接成功时，应用程序两端都会产生一个 `Socket` 示例，操作这个示例，完成所需要的会话
+
+<img src=".\note_imgs\socket.png" style="zoom:67%;" />
 
 `java.net.Socket` 为套接字类，其提供了很多方法：
 
@@ -1433,3 +1600,272 @@ Thread-4 读取完毕
   - `InetAddress  getIntAddress()` ：获取套接字绑定的远端地址
 
 <img src=".\note_imgs\tcp01.png" style="zoom: 67%;" />
+
+使用 `Socket` 制作一个简易的聊天室
+
+<img src=".\note_imgs\SocketNet.png" style="zoom:80%;" />
+
+客户端：
+
+```java
+package api.api.Socket.PartTwo;
+
+import java.io.*;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+
+/**
+ * @author chumeng
+ * @date 2022/5/18 11:34
+ */
+public class Client {
+    private Socket socket;
+
+    public Client(){
+        try {
+            socket = new Socket("localhost",10000);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    class ServerHandler implements Runnable {
+        @Override
+        public void run() {
+            // 构建输入流
+            InputStream in = null;
+            try {
+                in = socket.getInputStream();
+                InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(isr);
+
+                // 循环接收服务器信息
+                while (true) {
+                    System.out.println(br.readLine());
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    public void start(){
+
+        try (OutputStream out = socket.getOutputStream()) {
+            // 接收服务器端信息的线程启动
+            ServerHandler handler = new ServerHandler();
+            Thread t = new Thread(handler);
+            // 设置为守护线程
+            t.setDaemon(true);
+            t.start();
+
+
+            PrintStream ps = new PrintStream(out,true, StandardCharsets.UTF_8);
+
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                String line = scanner.nextLine();
+                ps.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static void main(String[] args) {
+        Client client = new Client();
+        client.start();
+    }
+}
+```
+
+服务器端：
+
+```java
+package api.api.Socket.PartTwo;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author chumeng
+ * @date 2022/5/18 9:55
+ */
+public class Server {
+    /**
+     * 所有客户端的输出流
+      */
+    private List<PrintWriter> allOut;
+
+    /**
+     * 服务端 socket
+     */
+    private ServerSocket serverSocket;
+
+    public Server() {
+        try {
+            serverSocket = new ServerSocket(10000);
+            allOut = new ArrayList<PrintWriter>();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void start() {
+        try {
+            System.out.println("等待客户端连接");
+            while (true) {
+                // 阻塞
+                Socket socket = serverSocket.accept();
+                System.out.println("已连接一个客户端");
+                ClientHandler handler = new ClientHandler(socket);
+                new Thread(handler).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (serverSocket != null) {
+                    serverSocket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    class ClientHandler implements Runnable {
+        // 该线程用于处理的客户端的 socket对象
+        private Socket socket;
+
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            // 创建向对应客户端发送信息的输出流对象
+            try (OutputStream out = socket.getOutputStream()) {
+                OutputStreamWriter osw = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+                PrintWriter pw = new PrintWriter(osw,true);
+                //  将该流存入共享集合
+                allOut.add(pw);
+
+                // 构建输入流获取客户端发送的信息
+                InputStream in = socket.getInputStream();
+                InputStreamReader isr = new InputStreamReader(in, StandardCharsets.UTF_8);
+                BufferedReader br = new BufferedReader(isr);
+                // 通过输入流读取信息
+                String message = null;
+                // 循环读取客户端发送的信息
+                while ((message = br.readLine()) != null) {
+
+                    // 遍历所有的输出流，将该客户端发送的信息转发给所有的客户端
+                    for (PrintWriter p : allOut) {
+                        p.println(message);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                // 当客户端断线，要将输出流从共享集合中删除
+				allOut.remove(pw);
+            }
+
+        }
+    }
+
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.start();
+    }
+}
+```
+
+问题：
+
+1. 客户端的频繁连接与断开，会使得服务端频繁创建和销毁线程
+2. 线程过度切换也会为服务端带来崩溃的分险
+3. 多个线程会共享服务端集合属性 `allOut` ，这里还存在着多线程并发的安全问题
+
+方案：
+
+1. 使用线程池技术来解决服务端多线程的问题，并解决多线程并发安全问题
+2. 将线程放入线程池内运行；将对 `allOut` 的操作写入多个方法，并对这些方法加锁，使一次只能由一个线程执行
+3. （代码改的有点乱，不想整理了，不粘出来了）
+
+###### `TCP`
+
+<img src=".\note_imgs\TCP.png" style="zoom: 80%;" />
+
+```java
+public class Send {
+    public static void main(String[] args) throws IOException {
+        // 数据包套接字
+        DatagramSocket socket = new DatagramSocket(10001);
+        // 数据报包
+        byte[] buffer = new byte[1024*1024];
+        DatagramPacket packet = new DatagramPacket(buffer,buffer.length);
+        // 在包中设置数据
+        packet.setData("hello".getBytes(StandardCharsets.UTF_8));
+        // 也可以设置为广播地址
+        packet.setSocketAddress(new InetSocketAddress("localhost",10000));
+        // 发送数据
+        socket.send(packet);
+    }
+}
+```
+
+```java
+public class Accept {
+    public static void main(String[] args) throws IOException {
+        DatagramSocket receiver = new DatagramSocket(10000);
+        System.out.println("开始接收");
+        // 接收消息
+        // 缓冲区,一般大于 64 kb
+        byte[] buffer = new byte[1024*1024];
+        DatagramPacket packet = new DatagramPacket(buffer,buffer.length);
+        receiver.receive(packet);
+        System.out.println("");
+
+        int length = packet.getLength();
+        String str = new String(buffer,0,length);
+        System.out.println(str);
+    }
+}
+```
+
+#### 设计模式
+
+单例模式：
+
+```java
+public class SingLeton {
+    private static SingLeton instance;    
+    // 私有化构造函数
+    private SingLeton() {
+    }
+    //  懒汉式
+    public static SingLeton getInstance() {
+        // 多线程并发下，每个线程都有 SingLeton 对象
+        if (instance != null) {
+            synchronized (SingLeton.class) {
+                if (instance != null) {
+                    // 实例化 instance
+                    instance = new SingLeton();
+                }
+            }
+        }
+        return instance;
+    }
+    
+    // 饿汉式
+    private static SingLeton instanceTest = new SingLeton();
+    public static SingLton instanceTest() {
+        return instanceTest;
+    }
+}
+```
