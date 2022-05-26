@@ -1,7 +1,7 @@
 #### `String`
 
 1. 构造方法：
-   - `public  String()` ：创建 `String` 对象
+   - xxxxxxxxxx7 1FileInputStream fis = new FileInputStream("Hello.txt");2FileOutputStream fos = new FileOutputStream(new File("hello_copy.txt"));3byte[] bytes = new byte[1024];4int num;5while ((num = fis.read(bytes)) > 0){6    fos.write(bytes,0,num);7}java
    - `public  String(String original)` ：把字符串转成字符串
    - `public  String(char[] value)` ：把字符数组转成字符串
    - `public  String(char[] value,int index,int count)` ：把字符数组的一部分转成字符串

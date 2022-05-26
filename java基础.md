@@ -2,11 +2,11 @@
 
 ##### JDK 、JRE 、JVM
 
-- JVM：java虚拟机，保证java语言跨平台
+- JVM：java虚拟机；保证java语言跨平台
 
 - xxxxxxxxxx7 1FileInputStream fis = new FileInputStream("Hello.txt");2FileOutputStream fos = new FileOutputStream(new File("hello_copy.txt"));3byte[] bytes = new byte[1024];4int num;5while ((num = fis.read(bytes)) > 0){6    fos.write(bytes,0,num);7}java
 
-- JDK：java开发环境。包括JRE和开发工具（javac，java）
+- JDK：java开发环境；包括JRE和开发工具（javac，java）
 
 ##### 常见命名方式
 
@@ -165,7 +165,7 @@ JVM 会寻找特定的方法签名开始运行，该方法为  `public static vo
 
 ##### 可变长参数
 
-在定义方法时，在最后一个形参后加上三个点 `...` ，就表示该形参可以接收多个参数值，多个参数值被当成数组传入
+在定义方法时，在最后一个形参后加上三个点 `...` ，就表示该形参可以接收多个参数值，多个参数值被当成数组传入（因此也可以传数组）
 
 ```java
 public static void method(String... args){
@@ -229,8 +229,8 @@ static 块仅在加载类时调用一次，但是实例化一个类的对象时�
   - 栈内存是线程私有的
   - 堆内存是所有线程共有的
 - 异常错误不同
-  - 栈空间不足：java.lang.StackOverFlowError
-  - 堆空间不足：java.lang.OutOfMemoryError
+  - 栈空间不足：`java.lang.StackOverFlowError`
+  - 堆空间不足：`java.lang.OutOfMemoryError`
 - 空间大小
   - 栈的空间大小远远小于堆的
 

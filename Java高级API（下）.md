@@ -422,6 +422,190 @@ br.close();
    String s = input.readLine();
    ```
 
+#### 反射
+
+通过 `Java` 反射机制，可以在程序中访问已经装载到 `JVM` 中的 `Java` 对象的描述，实现访问，检测和修改 `Java` 对象本身信息的功能；`Java` 反射功能强大，存在 `java.lang.reflect`
+
+所有类都继承 `Object`，所以每个对象均有 `getClass()` ，该方法返回一个类型为 Class 的对象；`Class test = cell.getClass();` ：`test` 为一个 `Class` 类型的对象，利用 `Class` 类的对象 `test`，可以访问用来返回该对象的描述信息
+
+可以访问的信息如下：
+
+| 组成部分 |          访问方法           |      返回值类型      |                说明                |
+| :------: | :-------------------------: | :------------------: | :--------------------------------: |
+|  包路径  |       `getPackage()`        |    `Package` 对象    |         获得该类的存放路径         |
+|  类名称  |         `getName()`         |    `String` 对象     |           获得该类的名称           |
+|  继承类  |      `getSuperClass()`      |     `Class` 对象     |          获得该类继承的类          |
+| 实现接口 |      `getInterfaces()`      |    `Class` 型数组    |       获得该类实现的所有接口       |
+| 构造方法 |     `getConstructors()`     | `Constructor` 型数组 | 获得所有权限为 `public` 的构造方法 |
+|          | `getDeclaredConstructors()` | `Constructor` 型数组 | 获得所有的构造方法，按声明顺序返回 |
+|  内部类  |            `...`            |                      |                                    |
+|   方法   |       `getMethods()`        |   `Method` 型数组    |       获得所有权限为`public`       |
+|          |    `getDeclaredMethod()`    |   `Method` 型数组    |    获得所有方法，按声明顺序返回    |
+| 成员变量 |        `getFields()`        |    `Field` 型数组    | 获得所有权限为 `public` 的成员变量 |
+|          |    `getDeclaredFields()`    |    `Field` 型数组    |  获得所有成员变量，按声明顺序返回  |
+
+###### 访问构造方法
+
+`Constructor` 对象代表一个构造方法，利用 `Constructor` 对象可以操纵相应的构造方法
+
+|               方法                |                             说明                             |
+| :-------------------------------: | :----------------------------------------------------------: |
+|           `isVarArgs()`           | 查看该构造方法是否允许带有可变数量的参数，如果允许则返回`true`，否则返回 `false` |
+|       `getParameterTypes()`       | 按照声明顺序以 `Class` 数组的形式获得该构造方法的各个参数的类型 |
+|      `getExeceptionTypes()`       |    以 `Class` 数组的形式获得该构造方法可能抛出的异常类型     |
+|         `setAccessible()`         | 如果该构造方法的权限为 `private`，默认为不允许通过反射利用 `newInstance(Object... initargs)` 方法创建对象，如果先执行该方法，并将入口参数设为 `true`，则允许创建 |
+| `newInstance(Object... initargs)` | 通过构造方法利用指定参数创建一个该类的对象，如果未设置参数则表示采用默认无参数的构造方法 |
+
+```java
+public class Main {
+    String s;
+    int i;
+    int i2;
+    int i3;
+    private Main () throws ClassNotFoundException {
+
+    }
+    protected Main(String s,int i) throws FileNotFoundException, IOException {
+
+    }
+    public Main (String... strings) {
+        if (0 < strings.length) {
+            i = Integer.parseInt(strings[0]);
+        }
+        if (1 < strings.length) {
+            i2 = Integer.parseInt(strings[1]);
+        }
+        if (2 < strings.length) {
+            i3 = Integer.parseInt(strings[2]);
+        }
+    }
+    public void print() {
+        System.out.println("s=" + s);
+        System.out.println("i=" + i);
+        System.out.println("i2=" + i2);
+        System.out.println("i3=" + i3);
+    }
+
+    public static void main(String[] args) {
+        Main main = new Main("10","20","30");
+        Class<? extends Main> test = main.getClass();
+        // 获得所有的构造方法
+        Constructor<?>[] declaredConstructors = test.getDeclaredConstructors();
+        for (Constructor<?> constructor : declaredConstructors) {
+            // 查看该构造函数是否带有可变数量的参数
+            System.out.print(constructor.isVarArgs() + ",");
+            System.out.print("该构造函数的参数类型依次为:");
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            for (Class<?> c : parameterTypes) {
+                System.out.print(" " + c);
+            }
+            System.out.print("该构造函数的可能抛出的异常依次为:");
+            Class<?>[] exceptionTypes = constructor.getExceptionTypes();
+            for (Class<?> c : exceptionTypes) {
+                System.out.print(" " + c);
+            }
+            System.out.println();
+
+            
+            
+            try {
+                // 创建一个 Main 类的对象，要根据当前 constructor 的参数来实例化
+                constructor.newInstance();
+                constructor.newInstance("1",1);
+                constructor.newInstance("1","2","3");
+                constructor.newInstance(new Object[]{new String[]{"1","2","3"}});
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+输出：
+
+```
+true,该构造函数的参数类型依次为: class [Ljava.lang.String;该构造函数的可能抛出的异常依次为:
+false,该构造函数的参数类型依次为: class java.lang.String int该构造函数的可能抛出的异常依次为: class java.io.FileNotFoundException class java.io.IOException
+false,该构造函数的参数类型依次为:该构造函数的可能抛出的异常依次为: class java.lang.ClassNotFoundException
+```
+
+如果构造方法构造方法被声明为 `private`，在其他类使用： `constructor.newInstance();` 时会抛出异常，使用 `constructor.setAccessible(true);` 后则可以创建
+
+```java
+public class Test {
+    public static void main(String[] args) {
+        Class<? extends Main> test = Main.class;
+        Constructor<?>[] constructor = test.getDeclaredConstructors();
+        try {
+            constructor[2].setAccessible(true);
+            constructor[2].newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+###### 访问成员变量
+
+|       方法        |                             说明                             |
+| :---------------: | :----------------------------------------------------------: |
+|    `getName()`    |                      获取成员变量的名称                      |
+|    `getType()`    |                      获取成员变量的类型                      |
+|      `get()`      |                       获取成员变量的值                       |
+|      `set()`      |                       设置成员变量的值                       |
+|    `setInt()`     |             设置成员变量类型为 `int` 的变量的值              |
+| `getModifiers()`  | 返回该变量的各个修饰符所对应的 `int` 数相加所得的值，不同修饰符对应的值不一样 |
+| `setAccessible()` |                   移除访问控制修饰符的限制                   |
+
+
+
+```java
+public class Main {
+    String s;
+    private int i;
+    int i2;
+    public static int i3;
+}
+
+
+
+public class TestGetField {
+    public static void main(String[] args) throws IllegalAccessException {
+        Main main = new Main();
+        Class<? extends Main> mainClass = main.getClass();
+        Field[] declaredFields = mainClass.getDeclaredFields();
+        // 移除访问控制修饰符的限制
+        declaredFields[1].setAccessible(true);
+        for (int i = 0; i < declaredFields.length; i++) {
+            System.out.print(declaredFields[i].getName() + " ");
+            System.out.print(declaredFields[i].getType() + " ");
+            // 得到传入对象对应的变量的值
+            System.out.print(declaredFields[i].get(main) + " ");
+            if (i == 0) {
+                declaredFields[i].set(main,"hello");
+            } else {
+                declaredFields[i].setInt(main,1);
+            }
+            System.out.print(declaredFields[i].get(main) + " ");
+            // 返回该变量的各个修饰符所对应的 int数相加所得的值
+            System.out.print(declaredFields[i].getModifiers());
+            System.out.println();
+        }
+    }
+}
+```
+
+输出
+
+```
+s class java.lang.String null hello 0
+i int 0 1 2
+i2 int 0 1 0
+i3 int 0 1 9
+```
+
 #### 异常处理
 
 在 `Java` 语言出现之前，传统的异常处理方式多采用返回值来表示程序出现的异常情况，这种方式虽然为程序员所熟悉，但却有多个坏处：
@@ -1007,7 +1191,7 @@ public class SynchronizedTwoTest {
 
 `notify()` 和 `notifyAll()`
 
-`notify()` 和 `notifyAll()` 都是用来唤醒调用 wait() 进入等待锁资源队列的线程
+`notify()` 和 `notifyAll()` 都是用来唤醒调用 `wait()` 进入等待锁资源队列的线程
 
 - `notify()` ：唤醒正在等待此对象监视器的单个线程，如果有多个线程在等待，则选中其中一个随机唤醒（由调度器决定），唤醒的线程享有公平竞争资源的权利
 - `notifyAll()`：唤醒正在等待此对象监视器的所有线程，唤醒的所有线程公平竞争资源
@@ -1797,7 +1981,7 @@ public class Server {
 2. 将线程放入线程池内运行；将对 `allOut` 的操作写入多个方法，并对这些方法加锁，使一次只能由一个线程执行
 3. （代码改的有点乱，不想整理了，不粘出来了）
 
-###### `TCP`
+###### `UDP`
 
 <img src=".\note_imgs\TCP.png" style="zoom: 80%;" />
 
