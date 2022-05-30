@@ -119,7 +119,7 @@ System.out.println(str.hashCode() == str.append("i").hashCode());	// true , Stri
 
 `StringBuilder` 总结
 
-`StringBuilder` 是可变字符串，字符串的内容计算，建议采用 StringBuilder 实现，这样性能会好一些
+`StringBuilder` 是可变字符串，字符串的内容计算，建议采用 `StringBuilder` 实现，这样性能会好一些
 
 java 的字符串连接过程是利用 `StringBuilder` 实现的
 
@@ -530,7 +530,7 @@ System.out.ptintln(sdf.format(c.getTime()));  // 没有被设置的默认为系�
 
   ```java
   Calendar c = Calendar.getInstance();
-  c.set(Calendar.YEAR，1);  	// 当前年份加一
+  c.add(Calendar.YEAR，1);  	// 当前年份加一
   ```
 
 获取日期和时间分量
@@ -591,7 +591,7 @@ System.out.println(cells);  // 输出数据发生改变（多个引用指向同�
 
 - `boolean  add(E e)` ：该方法将给定的元素添加进集合，若添加成功则返回 `true` ，否则返回 `false` 
 
-- `boolean  contains(Object object)` ：该方法用于判断给定的元素是否包含在集合中，若包含则返回 `true`，否则返回 `false`；集合在判断元素是否包含在集合中是根据每个元素的 equals() 方法进行比较后的结果，通常有必要重写 `equals()` 保证 `contains()` 方法的合理结果
+- `boolean  contains(Object object)` ：该方法用于判断给定的元素是否包含在集合中，若包含则返回 `true`，否则返回 `false`；集合在判断元素是否包含在集合中是根据每个元素的 `equals()` 方法进行比较后的结果，通常有必要重写 `equals()` 保证 `contains()` 方法的合理结果
 
   ```java
   Collection<String> c = new ArrayList<>();
@@ -758,7 +758,7 @@ for (String str : c1) {
 
 2. 数组转换为 `List` ：`Arrays` 类中提供有个静态方法 `asList()` ，使用该方法可以将一个数组转换成对应的 `List` 集合
 
-   - `static  <T>List<T>  asList<T...a>` ：返回的 List 的集合类型由传入的数组的元素类型决定；要注意的是：返回的集合不能对其增删元素，否则会抛出异常，并且对集合的元素进行修改会影响数组对应的元素
+   - `static  <T>List<T>  asList<T...a>` ：返回的 `List` 的集合类型由传入的数组的元素类型决定；要注意的是：返回的集合不能对其增删元素，否则会抛出异常，并且对集合的元素进行修改会影响数组对应的元素
 
      ```java
      String[] strarr = {"a","c"};
@@ -917,7 +917,7 @@ Map 中的一些静态属性：
   }
   ```
 
-有序的 `Map`：`LinkedHashMap` 实现有序 `Map`；使用 `Map` 接口的哈希表和链表实现，具有可预知的迭代顺序，此实现与 `HashMap` 的不同之处在于：LinkedHashMap 堆维护这一个双向循环列表，此链表定义了迭代顺序，该迭代顺序
+有序的 `Map`：`LinkedHashMap` 实现有序 `Map`；使用 `Map` 接口的哈希表和链表实现，具有可预知的迭代顺序，此实现与 `HashMap` 的不同之处在于：`LinkedHashMap` 堆维护这一个双向循环列表，此链表定义了迭代顺序，该迭代顺序
 
 通常就是存放元素的顺序；需要注意的是：如果在 `Map` 中重新存入已有的 `key`，那么 `key` 的位置不会变化，只是 `value` 替换
 

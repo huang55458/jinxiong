@@ -334,3 +334,22 @@ for(int i=0; i<arr.length-1 ; i++){
 }
 ```
 
+##### 选择排序
+
+```java
+    stint[] sort(int[] arr) {
+        for (int i = 1; i < arr.length; i++) {
+            int index = 0;
+            for (int j = 1; j <= arr.length - i; j++) {
+                if (arr[j] > arr[index]) {
+                    index = j;
+                }
+            }
+            int temp = arr[arr.length - i];
+            arr[arr.length - i] = arr[index];
+            arr[index] = temp;
+        }
+        return arr;
+    }
+```
+
