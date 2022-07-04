@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 ##### ` RandomAccessFile`
 
 `Java` 提供了一个可以对文件随机访问的操作，访问包括读和写操作，该类名为 `RandomAccessFile`，该类的读写是基于指针的操作
@@ -1620,7 +1624,7 @@ public class TestExecutorService {
             Handler handler = new Handler();
             threadPool.execute(handler);
         }
-        threadPool.shutdownNow();
+        threadPool.shutdown();
     }
 }
 class Handler implements Runnable {

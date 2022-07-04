@@ -759,6 +759,14 @@ jsp 页面中的 java 代码
 
   - taglib：
 
+    ```xml
+    <dependency>
+      <groupId>org.glassfish.web</groupId>
+      <artifactId>jakarta.servlet.jsp.jstl</artifactId>
+      <version>2.0.0</version>
+    </dependency>
+    ```
+
 - 作用：控制 jsp 在转译成 Servlet 类时 生成的内容
 
 
@@ -1442,6 +1450,15 @@ Tomcat 10.* （详见 [jstl 的 jar 包处理](https://stackoverflow.com/questio
     <version>2.0.0</version>
 </dependency>
 ```
+
+
+
+```
+结论：Tomcat 10 使用 JSTL2.0.0 无问题
+    Tomcat 9 使用 JSTL 1.2.6 出错，可将 c.tld 直接丢至 web-inf 下运行
+```
+
+
 
 
 

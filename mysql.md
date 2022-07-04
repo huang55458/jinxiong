@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 #### 安装
 
 ###### 基本命令操作
@@ -54,6 +58,56 @@ mysql 数据库常用命令（SQL 语言操作数据的常用命令 + mysql 数�
 
 - `alter database java220201 character set utf8mb4;` 
 
+###### `SQL Select`的执行顺序
+
+1、from子句组装来自不同数据源的数据； （先join在on）
+
+2、where子句基于指定的条件对记录行进行筛选；
+
+3、group by子句将数据划分为多个分组；
+
+4、使用聚集函数进行计算；
+
+5、使用having子句筛选分组；
+
+6、计算所有的表达式；
+
+7、select 的字段；
+
+8、使用order by对结果集进行排序
+
+SQL 语言不同于其他编程语言的最明显特征是处理代码的顺序。在大多数据库语言中，代码按编码顺序被处理。但在SQL语句中，第一个被处理的子句是 FROM，而不是第一出现的SELECT；SQL查询处理的步骤序号：
+
+(1) FROM <left_table>
+
+(2) <join_type> JOIN <right_table>
+
+(3) ON <join_condition>
+
+(4) WHERE <where_condition>
+
+(5) GROUP BY <group_by_list>
+
+(6) WITH {CUBE | ROLLUP}
+
+(7) HAVING <having_condition>
+
+(8) SELECT
+
+(9) DISTINCT
+
+(9) ORDER BY <order_by_list>
+
+以上每个步骤都会产生一个虚拟表，该虚拟表被用作下一个步骤的输入；这些虚拟表对调用者(客户端应用程序或者外部查询)不可用。只有最后一步生成的表才会会给调用者；如果没有在查询中指定某一个子句，将跳过相应的步骤
+
+###### `having` 用法
+
+- having 子句与 group by 子句一起使用，不一起使用将没有意义，因为使用条件限制
+- 使用条件
+  - 常数
+  - 聚合函数
+  - `group by` 指定的列名
+
 ###### 查询数据表命令
 
 - `select  *  from  表名;` ：全字段 + 全表扫描
@@ -100,7 +154,7 @@ mysql 数据库常用命令（SQL 语言操作数据的常用命令 + mysql 数�
 3. 按多个字段进行分组
    -  `select id,group_concat(gender) from students group by id,gender;` 先按照 id 进行分组，然后对剩下的数据再按照 gender 进行分组
 
-分组函数实际上最多的应用适合聚集函数（ `count() , max() , min() , avg() , sum()` ）配合使用
+分组函数实际上最多的应用适合聚集函数（ `count() , max() , min() , avg() , sum()` ）配合使用 （用于 having 过滤）
 
 - `count()` ：查询记录总数
 - `avg()` ：平均值
@@ -226,8 +280,6 @@ mysql 数据库常用命令（SQL 语言操作数据的常用命令 + mysql 数�
              select department_name from departments ;
             ```
 
-          
-
 3. 关联子查询：
 
    1. 在单行子查询和多行子查询中，内查询和外查询是分开执行的，也就是说：内查询的执行与外查询的执行是没有关系的，外查询仅仅是使用内查询的最终结果
@@ -238,8 +290,6 @@ mysql 数据库常用命令（SQL 语言操作数据的常用命令 + mysql 数�
       select * from employess e 
       where salary > (select avg(salary) from employess where e.job_id = employess.job_id);
       ```
-
-
 
 自连接
 
@@ -253,9 +303,452 @@ on emp1.manager_id = emp2.id;
 
  
 
+- `select * from employess where id not in (23,4,null);` ：结果为 `Empty set`，not in 与 null 不能一起出现
+
+- `select now() from dual;`：`dual` 临时表
+
+- `select concat(name,',',password) 账户 from users;`
+
+- `select datediff('2222-2-2','3333-3-3');` ：`datediff(d1,d2)` ，计算两个日期之间相隔的天数，为 d1 - d2
+
+- `select adddate('2222-2-2',405814);`  ：`adddate(d,n)` ，返回日期 d 加上 n 天后的日期，n 可以为负 （`subdate(d,n)` ：日期 d 减去 n 天）
+
+- `select datediff(sysdate(),hire_date)/365 year,datediff(sysdate(),hire_date) from employess order by year;` ：`hire_date` ：入职日期
+
+- `select * from employess where hire_date > '2020-05-01';` ：日期可以直接和字符串进行比较
+
+- `select name,hire_date from employess where to_days(now()) - to_days(hire_date) > 100;` ：`to_days(d)` ：返回 d 至 0000 年 1 月 1 日 的天数
+
+- `select concat(name,'想',truncate(salary*3,0),'每月') 梦想 from employess;` ：`truncate(num,p)` ：对 num 保留 p 位小数
+
+- 关联子查询
+
+  ```mysql
+  select d.* ,(select avg(salary) from employees where department_id = d.department_id ) min_avg_sal
+  from departments d
+  where department_id = (
+  		select department_id 
+  		from employees
+  		group by department_id 
+  		having avg(salary) = (
+  			select min(dept_avgsal)
+  			from (
+  			select avg(salary) dept_avgsal
+  			from employees
+  			group by department_id
+  			) avg_sal
+  		)
+  	);
+  ```
+
+  
+
+###### 约束
+
+- 主键约束：非空且唯一，能够唯一确定表中的记录 `primary key`
+- 非空约束：`not null`
+- 唯一约束：`unique`
+
+- 外键约束：添加外键约束后，外键所在表为子表，外键关联表为父表，父表中外键字段不能随意删除，修改（添加外键约束时，父表中的关联字段应该非空且唯一）
+
+  - `alter table employess add foreign key (department_id) references departments(department_id);` 修改字段为外键约束
+
+    `alter table employess add constraint name foreign key (department_id) references departments(department_id);`  为外键约束命名（删除外键约束需要），同时也可以定义多个外键约束
+
+  -  `alter table employess drop foreign key name;` 删除外键约束
+
+  - ```mysql
+    CREATE TABLE test
+    (
+    id int NOT NULL,
+    P_Id int,
+        ...  ,
+    PRIMARY KEY (id),
+    CONSTRAINT name FOREIGN KEY (P_Id)
+    REFERENCES Persons(P_Id)
+    )
+    ```
+
+  - 外键的作用：
+
+    1. 子表：向子表更新，插入数据时应保证其外键字段的值能在父表中找到，删除没有限制
+    2. 父表：父表中的记录，如果已经被子表中的记录关联，则不能删除，关联字段不能更新，插入新数据不受影响
+
+  - 查看是否外键  `show create table employess;` / `desc employess;`
 
 
-`select * from employess where id not in (23,4,null);` ：结果为 `Empty set`，not in 与 null 不能一起出现
+
+###### 索引
+
+索引是一种将数据库中单列或多列的值进行排序的结果
+
+1. 将某个字段设置为索引或者将多个字段设置索引（联合索引）
+2. 将索引的值取出重新进行排序，生成新结构即为 B 树
+
+应用索引可以大幅度提高查询的速度
+
+为什么有索引？
+
+索引类似于书本中的目录，能够将某列或几列数据的特征记录
+
+怎么用？
+
+查询的时候，查询条件中带有索引列
+
+
+
+索引分类：
+
+- 单列索引：普通索引和唯一性索引都可以认为是单列索引
+- 多列索引：联合索引
+
+主键会自动成为索引列，并且属于唯一性索引；每个表都应设置主键，并设为自动增长
+
+- 查看索引： `show index from employess;`
+
+
+
+创建索引
+
+- 创建单列索引
+
+  - 主键自动成为索引
+
+  - 单列包含（普通索引，唯一性索引）
+
+    - 普通索引：对一个普通列（既不是主键，也不是外键并且没有任何约束）定为索引列
+    - 唯一性索引（主键是特殊的唯一性索引）：
+      - 对一个有唯一性约束列定义为索引
+      - 对一个普通列定位为索引是添加唯一性约束
+
+  - ```mysql
+    create table test_index (
+        id int primary key auto_increment,
+        name varchar(20),
+        address varchar(20),
+        unique index(name)
+    );
+    
+    -- 显示信息
+    explain select * from test_index where name = 'test';
+    
+    -- 创建索引
+    create index test_name on test_index(address);
+    
+    ```
+
+    
+
+- 创建多列索引
+
+  -  数据再插入时就会进行排序，优先按照主键排序、联合索引排序
+
+  - `create index test_name on test_index2(a,b,c);` 
+
+    1. 主键索引会生成主键 B 树
+    2. 联合索引会生成联合索引 B 树
+    3. 索引本身是将索引列的特征值取出并排序生成的，联合索引 B 树有多个列，优先按照第一个值进行排序，然后再按第二个， ...  ，如果在查询时，联合索引的第一个值没有，则联合索引数的顺序将失去意义，所以此时不会走索引，该现象称为 “ 最左前缀原则 ” 
+
+  - ```mysql
+    create table test_index2(
+        id int primary key auto_increment,
+        a int,
+        b int,
+        c int,
+        e varchar(20)
+    );
+    
+    -- 创建多列索引
+    create index test_name on test_index2(a,b,c); 
+    ```
+
+    
+
+  
+
+
+
+
+
+
+
+###### blob字段
+
+- `tinyint` ：1 字节，类似 java 中的 byte
+- `smallint` ：2 字节
+- `mediumint` ：3 字节
+- `int` ：4 字节
+- `bigint` ：8 字节
+
+
+
+- `char` ：固定长度的字符串类型    char(20)，不管放多少内容直接占 20 字符的容量 
+- `varchar` ：可变长度的字符串类型    varchar(20)，放 'hello' 只占 5 个字符
+
+
+
+- `blob` ：二进制对象，约64KB
+
+- `longblob` ：二进制对象，约4G
+
+- `longtext` ：大文本对象，约4G 字符串类型，固定长度
+
+  
+
+```java
+    @Test
+    public void testBlob() throws SQLException, IOException {
+        FileInputStream fis = new FileInputStream("C:\\Users\\chumeng\\Pictures\\1126563.jpg");
+        BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\chumeng\\Desktop\\1.txt"));
+
+        conn = JDBCUtil.openConnection();
+        String sql = "insert into testblob(photo,memo) values (?,?)";
+        ps = conn.prepareStatement(sql);
+        ps.setBinaryStream(1,fis,fis.available());
+        ps.setCharacterStream(2,br);
+//        ps.setString(2,"dd");
+
+        ps.execute();
+        fis.close();
+        br.close();
+
+        JDBCUtil.closeConnection(conn);
+        JDBCUtil.closePreparedStatement(ps);
+    }
+
+    @Test
+    public void findBlob() throws SQLException, IOException {
+        conn = JDBCUtil.openConnection();
+        String sql = "select * from testblob where id = ?";
+        ps = conn.prepareStatement(sql);
+        // 每次使用时记得更改
+        ps.setInt(1,2);
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            InputStream is = rs.getBinaryStream("photo");
+            byte[] buffer = new byte[1024];
+            FileOutputStream fos = new FileOutputStream("C:\\Users\\chumeng\\Desktop\\test.jpg");
+            int len;
+            while (((len = is.read(buffer)) != -1)) {
+                fos.write(buffer,0,len);
+            }
+
+            Reader r = rs.getCharacterStream("memo");
+            char[] buffer2 = new char[1024];
+            FileWriter fw = new FileWriter("C:\\Users\\chumeng\\Desktop\\test.txt");
+            int len2;
+            while ((len2 = r.read(buffer2)) != -1) {
+                fw.write(buffer2,0,len2);
+            }
+            fw.flush();
+
+            fos.close();
+            is.close();
+
+            fw.close();
+            r.close();
+
+            JDBCUtil.closeConnection(conn);
+            JDBCUtil.closePreparedStatement(ps);
+            JDBCUtil.closeResultSet(rs);
+        }
+    }
+```
+
+
+
+`datatime` 使用：
+
+```java
+    @Test
+    public void testTime() throws SQLException {
+        conn = JDBCUtil.openConnection();
+
+        String sql = "insert into testblob(current_test_time) values (now())";
+        ps = conn.prepareStatement(sql);
+
+
+        //
+//        java.util.Date now = new java.util.Date();
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        String nowStr = sdf.format(now);
+//        ps = conn.prepareStatement("insert into testblob(current_test_time) values (?)");
+//        ps.setString(1,nowStr);
+
+        ps.execute();
+
+        JDBCUtil.closeConnection(conn);
+        JDBCUtil.closePreparedStatement(ps);
+    }
+```
+
+
+
+###### mysql 数据类型总结
+
+在 mysql 数据库中，每一条数据都有其数据类型
+
+
+
+|  数字类型   |              取值范围               | 说明         | 单位   |
+| :---------: | :---------------------------------: | ------------ | ------ |
+|  `tinyint`  |    有符号 -128~127，无符号 0~255    | 存微小的整数 | 1 字节 |
+| `smallint`  | 有符号 -32768~32767，无符号 0~65535 | 存小型的整数 | 2 字节 |
+| `mediumint` |                 ...                 | 存中型的整数 | 3 字节 |
+|    `int`    |                 ...                 | 存标准的整数 | 4 字节 |
+|  `bigint`   |                 ...                 | 存大型的整数 | 8 字节 |
+
+默认是为有符号，用 unsigned 指定为无符号：`create table test(age int unsigned);`
+
+
+
+字符串类型
+
+| 普通的文本字符串类型 | 取值范围     |                              |
+| :------------------: | ------------ | ---------------------------- |
+|      `char(M)`       | 0~255 个字符 | 固定长度为 M 的字符串        |
+|     `varchar(M)`     | 0~255 个字符 | 长度可变，其他等同于 char(M) |
+
+可变类型（text、blob、longtext、longblob），它们大小可变，text 类型适合存储长文本，而 blob 适合存储二进制数据，本质上支持任何数据类型，如文本、音视频
+
+text，blob 指定的最大长度（字节数）：65535（约 64 KB）；longtext，longblob 指定的最大长度（字节数）：4 294 967 295 byte（约4G）
+
+
+
+日期和时间类型
+
+|    类型    |            |         格式          |
+| :--------: | ---------- | :-------------------: |
+|    date    | 日期       |     `yyyy-MM-dd`      |
+|    time    | 时间       |      `HH:mm:ss`       |
+| `datetime` | 日期和时间 | `yyyy-MM-dd HH:mm:ss` |
+
+
+
+###### 批处理
+
+mysql 本质是 socket 编程，使用批处理提升效率的本质是提升了输入输出流每次读取数据的数量，减少了和服务器连接的次数
+
+```java
+    @Test
+    public void testBatch() throws SQLException {
+        long time = System.currentTimeMillis();
+
+        conn = JDBCUtil.openConnection();
+        String sql = "insert into users(name,password) values(?,?)";
+        ps = conn.prepareStatement(sql);
+        ps.setString(1,"root");
+        ps.setString(2,"root");
+
+        // 取消自动提交
+        conn.setAutoCommit(false);
+        for (int i = 0;i < 10000;i++) {
+            ps.addBatch();
+            
+            if(i % 1000 == 1) {
+                ps.executeBatch();
+                // 清空批处理命令列表
+                ps.clearBatch();
+            }
+        }
+        // 手动提交
+        conn.commit();
+
+        JDBCUtil.closeConnection(conn);
+        JDBCUtil.closePreparedStatement(ps);
+        System.out.println(System.currentTimeMillis() - time + "ms");
+    }
+```
+
+
+
+###### 事务（transaction）
+
+ACID：
+
+- 原子性（**A**tomicity）：一个事务（transaction）中的所有操作，要么全部完成，要么全部不完成，不会结束在中间某个环节。事务在执行过程中发生错误，会被回滚（Rollback）到事务开始前的状态，就像这个事务从来没有执行过一样
+- 一致性（**C**onsistency）：在事务开始之前和事务结束以后，数据库的完整性没有被破坏。这表示写入的资料必须完全符合所有的预设规则，这包含资料的精确度、串联性以及后续数据库可以自发性地完成预定的工作
+- 隔离性（**I**solation，又称独立性）：数据库允许多个并发事务同时对其数据进行读写和修改的能力，隔离性可以防止多个事务并发执行时由于交叉执行而导致数据的不一致。事务隔离分为不同级别，包括读未提交（Read uncommitted）、读提交（read committed）、可重复读（repeatable read）和串行化（Serializable）
+- 持久性（**D**urability）：事务处理结束后，对数据的修改就是永久的（写入磁盘），即便系统故障也不会丢失
+
+
+
+mysql 对于 CRUD（增删改查）操作默认是自动提交的
+
+直接用 SET 来改变 MySQL 的自动提交模式:
+
+- `SET AUTOCOMMIT = 0` ：禁止自动提交
+- `SET AUTOCOMMIT = 1` ：开启自动提交
+
+
+
+在 MySQL 命令行的默认设置下，事务都是自动提交的，即执行 SQL 语句后就会马上执行 COMMIT 操作。因此要显式地开启一个事务务须使用命令 BEGIN 或 START TRANSACTION，或者执行命令 `SET AUTOCOMMIT = 0;`，用来禁止使用当前会话的自动提交
+
+- `BEGIN`、`start transaction`  开始一个事务
+- `ROLLBACK` 事务回滚（数据定义语言（DDL）不能被回滚（create、alter、...））
+- `COMMIT` 事务确认
+
+
+
+默认的情况：
+
+- 取消自动提交，多个客户端同时操作数据，无论其他客户端如何操作，当前会话窗口每次读取的数据都一样
+- 默认的隔离级别为 “ 可重复读 ”，repeatable read
+- 事务是否开启不影响隔离级别，开启事务之后可以保证原子性
+- mysql 支持多种存储引擎，默认使用的是 innodb ，它是众多引擎之中唯一支持事务的（`show engines;`）
+
+事务的隔离级别
+
+| 隔离级别         | 脏读 | 不可重复读 | 幻读 |
+| ---------------- | ---- | ---------- | ---- |
+| read-uncommitted | ✔    | ✔          | ✔    |
+| read-committed   | ✖    | ✔          | ✔    |
+| repeatable-read  | ✖    | ✖          | ✔    |
+| serializable     | ✖    | ✖          | ✖    |
+
+
+
+
+
+
+
+提交操作时将数据的修改写入磁盘中，数据写入磁盘后，`rollback` 是无效的（因此使用事务应先关闭自动提交）
+
+```java
+@Test
+public void testTransaction() throws SQLException {
+    conn = JDBCUtil.openConnection();
+    String sql = "insert into users(name,password) values(?,?)";
+    ps = conn.prepareStatement(sql);
+    ps.setString(1,"root");
+    ps.setString(2,"root");
+
+    // 取消自动提交
+    conn.setAutoCommit(false);
+    for (int i = 0;i < 10;i++) {
+        ps.execute();
+    }
+    conn.rollback();   //有这条语句数据不会添加成功
+    // 手动提交
+    conn.commit();
+
+    JDBCUtil.closeConnection(conn);
+    JDBCUtil.closePreparedStatement(ps);
+}
+```
+
+
+
+-  `select @@transaction_isolation;` ：查看当前会话隔离级别
+-  `set session transaction isolation level XX;` ：设置当前会话事务隔离级别
+-  `set global transaction isolation level XX;` ：设置全局会话事务隔离级别
+
+
+
+
+
+
 
 
 
