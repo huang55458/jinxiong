@@ -522,7 +522,7 @@ ps：优先级：精确匹配 > 通配符匹配 > 后缀匹配
 
 
 
-
+x 1    @PostMapping("zipUploadFile.form")2    public String zipUploadFile(@RequestParam("file") MultipartFile uploadFile, HttpServletRequest request) throws IOException {3        if (uploadFile.isEmpty()) {4            request.setAttribute("message","空文件");5            return "upload";6        }7​8        String path = request.getSession().getServletContext().getRealPath("zip");9        String name = uploadFile.getOriginalFilename();10        System.out.println(path);11​12        File file = new File(path);13        if ( !file.exists()) {14            file.mkdir();15        }16​17        // 压缩18        InputStream input = uploadFile.getInputStream();19        BufferedInputStream bis = new BufferedInputStream(input);20        File zipFile = new File(path + File.separator + name + ".zip");21        ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));22        assert name != null;23        zipOut.putNextEntry(new ZipEntry(name));24        zipOut.setComment("test");25​26        // 设置缓存大小 1M27        byte[] bytes = new byte[1048576];28        int i;29        while ( (i = bis.read(bytes)) != -1) {30            zipOut.write(bytes,0,i);31        }32​33        input.close();34        zipOut.close();35​36        request.setAttribute("message","success");37        return "upload";38    }java
 
 测试生命周期
 
@@ -564,16 +564,16 @@ public class LifeCycleServlet  extends HttpServlet {
 
 ###### @WebServlet 注解
 
-| 属性名         | 类型            | 标签              | 描述                                                         | 是否必需 |
-| -------------- | --------------- | ----------------- | ------------------------------------------------------------ | -------- |
-| name           | String          | <servlet-name>    | 指定 Servlet 的 name 属性。 如果没有显式指定，则取值为该 Servlet 的完全限定名，即包名+类名。 | 否       |
-| value          | String[ ]       | <url-pattern>     | 该属性等价于 urlPatterns 属性，两者不能同时指定。 如果同时指定，通常是忽略 value 的取值。 | 是       |
-| urlPatterns    | String[ ]       | <url-pattern>     | 指定一组 Servlet 的 URL 匹配模式。                           | 是       |
-| loadOnStartup  | int             | <load-on-startup> | 指定 Servlet 的加载顺序。                                    | 否       |
-| initParams     | WebInitParam[ ] | <init-param>      | 指定一组 Servlet 初始化参数。                                | 否       |
-| asyncSupported | boolean         | <async-supported> | 声明 Servlet 是否支持异步操作模式。                          | 否       |
-| description    | String          | <description>     | 指定该 Servlet 的描述信息。                                  | 否       |
-| displayName    | String          | <display-name>    | 指定该 Servlet 的显示名。                                    | 否       |
+| 属性名         | 类型            | 标签                                                         | 描述                                                         | 是否必需 |
+| -------------- | --------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | -------- |
+| name           | String          | xxxxxxxxxx38 1    @PostMapping("zipUploadFile.form")2    public String zipUploadFile(@RequestParam("file") MultipartFile uploadFile, HttpServletRequest request) throws IOException {3        if (uploadFile.isEmpty()) {4            request.setAttribute("message","空文件");5            return "upload";6        }7​8        String path = request.getSession().getServletContext().getRealPath("zip");9        String name = uploadFile.getOriginalFilename();10        System.out.println(path);11​12        File file = new File(path);13        if ( !file.exists()) {14            file.mkdir();15        }16​17        // 压缩18        InputStream input = uploadFile.getInputStream();19        BufferedInputStream bis = new BufferedInputStream(input);20        File zipFile = new File(path + File.separator + name + ".zip");21        ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));22        assert name != null;23        zipOut.putNextEntry(new ZipEntry(name));24        zipOut.setComment("test");25​26        // 设置缓存大小 1M27        byte[] bytes = new byte[1048576];28        int i;29        while ( (i = bis.read(bytes)) != -1) {30            zipOut.write(bytes,0,i);31        }32​33        input.close();34        zipOut.close();35​36        request.setAttribute("message","success");37        return "upload";38    }java | 指定 Servlet 的 name 属性。 如果没有显式指定，则取值为该 Servlet 的完全限定名，即包名+类名。 | 否       |
+| value          | String[ ]       | <url-pattern>                                                | 该属性等价于 urlPatterns 属性，两者不能同时指定。 如果同时指定，通常是忽略 value 的取值。 | 是       |
+| urlPatterns    | String[ ]       | <url-pattern>                                                | 指定一组 Servlet 的 URL 匹配模式。                           | 是       |
+| loadOnStartup  | int             | <load-on-startup>                                            | 指定 Servlet 的加载顺序。                                    | 否       |
+| initParams     | WebInitParam[ ] | <init-param>                                                 | 指定一组 Servlet 初始化参数。                                | 否       |
+| asyncSupported | boolean         | <async-supported>                                            | 声明 Servlet 是否支持异步操作模式。                          | 否       |
+| description    | String          | <description>                                                | 指定该 Servlet 的描述信息。                                  | 否       |
+| displayName    | String          | <display-name>                                               | 指定该 Servlet 的显示名。                                    | 否       |
 
 ```java
 @WebServlet(asyncSupported = true, name = "myServlet", description = "name描述", loadOnStartup = 1, urlPatterns = {
@@ -1455,7 +1455,7 @@ Tomcat 10.* （详见 [jstl 的 jar 包处理](https://stackoverflow.com/questio
 
 ```
 结论：Tomcat 10 使用 JSTL2.0.0 无问题
-    Tomcat 9 使用 JSTL 1.2.6 出错，可将 c.tld 直接丢至 web-inf 下运行
+    Tomcat 9 使用 JSTL 1.2.6 出错，可将 c.tld 直接丢至 web-inf 下运行（已解决，tomcat配置文件设置了跳过扫描所有 ）
 ```
 
 

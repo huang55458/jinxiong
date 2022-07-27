@@ -591,13 +591,13 @@ on emp1.manager_id = emp2.id;
 
 
 
-|  数字类型   |              取值范围               | 说明         | 单位   |
-| :---------: | :---------------------------------: | ------------ | ------ |
-|  `tinyint`  |    有符号 -128~127，无符号 0~255    | 存微小的整数 | 1 字节 |
-| `smallint`  | 有符号 -32768~32767，无符号 0~65535 | 存小型的整数 | 2 字节 |
-| `mediumint` |                 ...                 | 存中型的整数 | 3 字节 |
-|    `int`    |                 ...                 | 存标准的整数 | 4 字节 |
-|  `bigint`   |                 ...                 | 存大型的整数 | 8 字节 |
+|  数字类型   |              取值范围               | 说明         | 单位                                                         |
+| :---------: | :---------------------------------: | ------------ | ------------------------------------------------------------ |
+|  `tinyint`  |    有符号 -128~127，无符号 0~255    | 存微小的整数 | 1 字节                                                       |
+| `smallint`  | 有符号 -32768~32767，无符号 0~65535 | 存小型的整数 | 2 字节                                                       |
+| `mediumint` |                 ...                 | 存中型的整数 | 3 字节                                                       |
+|    `int`    |                 ...                 | 存标准的整数 | 4 字节                                                       |
+|  `bigint`   |                 ...                 | 存大型的整数 | xxxxxxxxxx38 1    @PostMapping("zipUploadFile.form")2    public String zipUploadFile(@RequestParam("file") MultipartFile uploadFile, HttpServletRequest request) throws IOException {3        if (uploadFile.isEmpty()) {4            request.setAttribute("message","空文件");5            return "upload";6        }7​8        String path = request.getSession().getServletContext().getRealPath("zip");9        String name = uploadFile.getOriginalFilename();10        System.out.println(path);11​12        File file = new File(path);13        if ( !file.exists()) {14            file.mkdir();15        }16​17        // 压缩18        InputStream input = uploadFile.getInputStream();19        BufferedInputStream bis = new BufferedInputStream(input);20        File zipFile = new File(path + File.separator + name + ".zip");21        ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));22        assert name != null;23        zipOut.putNextEntry(new ZipEntry(name));24        zipOut.setComment("test");25​26        // 设置缓存大小 1M27        byte[] bytes = new byte[1048576];28        int i;29        while ( (i = bis.read(bytes)) != -1) {30            zipOut.write(bytes,0,i);31        }32​33        input.close();34        zipOut.close();35​36        request.setAttribute("message","success");37        return "upload";38    }java |
 
 默认是为有符号，用 unsigned 指定为无符号：`create table test(age int unsigned);`
 

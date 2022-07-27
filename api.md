@@ -15,7 +15,7 @@
       - `boolean  startsWith(String str)` ：判断是否以指定的字符串开头
       - `boolean  endsWith(String str)` ：判断是否以指定的字符串结尾
       - `boolean  isEmpty()` ：判断字符串的内容是否为空
-   2. 获取功能
+   2. xxxxxxxxxx2 1@JsonFormat(pattern = "yyyy-MM-dd hh:mm:ss")2private Date time;java
       - `int  length()` ：返回字符串的长度
       - `char  charAt(int index)` ：返回字符串指定位置的字符
       - `int  indexOf(int char)` ：返回指定字符在字符串中第一次出现的位置    `97 = 'a'`

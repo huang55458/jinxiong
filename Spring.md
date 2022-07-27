@@ -228,6 +228,309 @@ DI 主要有两种注入方式：setter 注入和构造器注入
 
 
 
+###### AOP
+
+
+
+```xml
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjweaver</artifactId>
+  <version>1.9.9.1</version>
+</dependency>
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjrt</artifactId>
+  <version>1.9.9.1</version>
+</dependency>
+```
+
+
+
+面向切面编程，AOP 主要用于处理共通逻辑，例如：日志记录、性能统计、安全控制、事物处理、异常处理等，AOP 可以将这些共通逻辑从普通业务逻辑代码中分离出来，这样在日后修改这些逻辑的时候就不会影响普通业务逻辑的代码
+
+利用 AOP 可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，同时提高了开发的效率
+
+
+
+AOP、OOP 在字面上非常类似，但却是面向不同领域的两种设计思想
+
+- OOP (面向对象编程)：这一业务处理过程的实体及其属性和行为进行抽象封装，以获得更加清楚高效的逻辑单元划分
+- AOP 则是针对业务处理过程中的切面进行提取，它所面对的是处理过程中的某个步骤或阶段，以获得逻辑过程中各部分之间低耦合的隔离效果
+- AOP 需要以 OOP 为前提基础
+
+
+
+什么是方面 ？
+
+指封装共同处理的组件，该组件被作用到其他目标组件方法上
+
+什么是目标 ?
+
+指被一个或多个方面所作用的对象
+
+什么是切入点 ？
+
+切入点是用于指定哪些组件和方法使用方面功能，在 Spring 中利用一个表达式指定切入目标
+
+Spring 提供以下常用的切入点目标：
+
+- 方法限定表达式
+- 类型限定表达式
+
+
+
+什么是通知 ？
+
+通知是用于指定方面组件和目标组件作用的时机，例如：方面功能在目标方法之前或之后执行等时机
+
+Spring 框架提供以下几种类型的通知：
+
+- 前置通知：先执行方面功能再执行目标功能
+- 后置通知（after-returning）：先执行目标功能再执行方面功能（目标无异常才执行方面）
+- 最终通知（after）：先执行目标功能再执行方面功能（目标有无异常都执行方面）
+- 异常通知：先执行目标，抛出后执行方面
+- 环绕通知：先方面前置部分，然后执行目标，最后再执行方面后置部分
+
+
+
+所有通知都配置的情况下：执行顺序由配置顺序决定
+
+
+
+配置方面
+
+```java
+public class OperateLogger {
+    public void log1() {
+        System.out.println("前置通知");
+    }
+    public void log2() {
+        System.out.println("后置通知");
+    }
+    public void log3() {
+        System.out.println("最终通知");
+    }
+    // 日志记录
+    public Object log4(ProceedingJoinPoint p) throws Throwable {
+        String classname = p.getTarget().getClass().getName();
+        String method = p.getSignature().getName();
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String msg = "----> 用户在" + date +",执行了" + classname + "," +method + "()方法";
+        System.out.println(msg);
+        Object object = p.proceed();
+        System.out.println("调用目标主键方法之后");
+        return null;
+    }
+    public void log5(Exception e) {
+        StackTraceElement[] elems = e.getStackTrace();
+        System.out.println("-->" + elems[0].toString());
+    }
+}
+```
+
+配置切入点：
+
+```xml
+<bean id="operateLogger" class="aspect.OperateLogger"/>
+<aop:config>
+    <aop:aspect ref="operateLogger">
+        <aop:before method="log1" pointcut="within(controller.EmpController*) "/>
+        <aop:after-returning method="log2" pointcut="within(controller.EmpController*)" />
+        <aop:after method="log3" pointcut="within(controller.EmpController*)" />
+        <aop:around method="log4" pointcut="within(controller.EmpController*)" />
+        <aop:after-throwing method="log5" throwing="e" pointcut="within(controller.EmpController*)" />
+    </aop:aspect>
+</aop:config>
+```
+
+
+
+[AOP](https://docs.spring.io/spring-framework/docs/2.5.x/reference/aop.html)
+
+注解方法：
+
+- Aspect：声明方面组件
+- Before：声明前置通知
+- AfterReturning：后置通知
+- After：最终通知
+- Around：环绕通知
+- AfterThrowing：异常通知
+
+
+
+
+
+
+
+
+
+```xml
+<!--    启用 @AspectJ 支持-->
+    <aop:aspectj-autoproxy/>
+```
+
+配置方面和切入点：
+
+```java
+@Aspect
+@Component
+public class OperateLogger {
+    @Before("within(controller.EmpController*)")
+    public void log1() {
+        System.out.println("前置通知");
+    }
+    @AfterReturning("within(controller.EmpController*)")
+    public void log2() {
+        System.out.println("后置通知");
+    }
+    @After("within(controller.EmpController*)")
+    public void log3() {
+        System.out.println("最终通知");
+    }
+    // 日志记录
+    @Around("within(controller.EmpController*)")
+    public Object log4(ProceedingJoinPoint p) throws Throwable {
+        String classname = p.getTarget().getClass().getName();
+        String method = p.getSignature().getName();
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        String msg = "----> 用户在" + date +",执行了" + classname + "," +method + "()方法 \n";
+        System.out.println(msg);
+
+        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("E:/log.txt",true));
+        bos.write(msg.getBytes());
+        bos.flush();
+        bos.close();
+
+        Object object = p.proceed();
+        System.out.println("调用目标主键方法之后");
+        return object;
+    }
+    @AfterThrowing(value = "within(controller.EmpController*)",throwing = "e")
+    public void log5(Exception e) {
+        StackTraceElement[] elems = e.getStackTrace();
+        System.out.println("-->" + elems[0].toString());
+    }
+}
+```
+
+
+
+
+
+Spring AOP 使用步骤：
+
+1. 创建方面组件
+2. 声明方面组件
+3. 将方面组件作用到目标组件上
+
+```java
+public class OperateLogger {
+    public void log1() {
+        System.out.println("前置通知");
+    }
+}
+```
+
+```xml
+<bean id="operateLogger" class="aspect.OperateLogger"/>
+<aop:config>
+    <aop:aspect ref="operateLogger">
+        <aop:before method="log1" pointcut="within(controller.EmpController*) "/>
+    </aop:aspect>
+</aop:config>
+```
+
+测试方法：
+
+```java
+@Test
+public void testBefore() {
+    ApplicationContext appContext = new ClassPathXmlApplicationContext("applicationContext.xml");
+    EmpController empController = appContext.getBean(EmpController.class);
+    empController.getEmpDao();
+}
+```
+
+- within ：用于匹配指定类型内的方法执行
+  - `within(controller..*)`：表示 controller 包及其子包下的任何方法执行
+  - `within(controller.EmpController*)`：表示 EmpController 这个类下的任何方法执行
+  - `within(controller..EmpController+)`：表示 controller 包及其子包下 EmpController 类型及其子类型的任何方法执行
+  - `within(@controller..Repository*)`：匹配 controller 包下持有 `@Repository` 注解的任何类型的任何方法
+
+
+
+
+
+###### 事务
+
+Spring 框架引入的重要因素之一是他全面的事务支持，Spring 框架提供了一致的事务管理方式，给程序带来了：
+
+- 提供简单易用的编程式事务管理 API
+- 支持声明式事务管理
+- 便于 Spring 整合各种数据访问技术
+
+
+
+
+
+```java
+public String addBatch() {
+    Emp e1 = new Emp();
+    e1.setEname("张三");
+    e1.setJob("坐牢");
+    e1.setComm(0);
+    empDao.save(e1); // 保存至数据库
+
+    Integer.parseInt("a");
+
+    Emp e2 = new Emp();
+    e2.setEname("小明");
+    e2.setJob("做数学题");
+    e2.setComm(0);
+    empDao.save(e2);
+}
+```
+
+执行上面方法只有张三会被加入数据库中，因此引入事务管理机制是很有必要的
+
+
+
+事务使用步骤：
+
+1. 声明事务组件
+2. 开启事务注解扫描
+3. 使用注解标识类、方法
+
+```xml
+<!--    声明事务组件-->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="datasource"/>
+    </bean>
+<!--    开启事务注解扫描-->
+    <tx:annotation-driven transaction-manager="txManager" proxy-target-class="true"/>
+```
+
+```java
+@Transactional
+public class EmpController {
+    ...
+}
+```
+
+
+
+1. 事务管理器 txManger 需要根据数据库访问技术不同选择不同的实现，例如：JDBC、Mybatis 技术选用 InternalResourceViewResolver，而 Hibernate 技术则选择 HibernateResourceViewResolver
+2. @Transaction 注解标记可以用在类定义上和方法定义上，方法的事务设置将优先于类级别注解的事务设置
+
+
+
+
+
+
+
+
+
 ###### 自动装配
 
 Spring IoC 容器可以自动装配（autowire）相互协作 bean 之间的关联关系，autowire可以针对单个 bean 进行设置，autowire的方便之处在于减少 xml 的注入配置；在 xml 配置文件中，有在 <bean> 元素中使用 autowire属性指定自动装配规则，一个有五种类型的值
@@ -737,7 +1040,7 @@ public class HelloController implements Controller {
 
 
 
-###### web.xml
+###### applicationContext.xml
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -753,21 +1056,86 @@ public class HelloController implements Controller {
 	xmlns:lang="http://www.springframework.org/schema/lang"
 	xmlns:p="http://www.springframework.org/schema/p"
 	xmlns:task="http://www.springframework.org/schema/task"
-	xsi:schemaLocation="http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.3.xsd
-		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
-		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.3.xsd
-		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+	xsi:schemaLocation="http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
-		http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-4.3.xsd
-		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
-		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
 		
 		
 </beans>
 ```
 
 
+
+###### web.xml
+
+Servlet 4.0 web.xml模板:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+version="4.0"
+metadata-complete="true">
+</web-app>
+```
+
+> metadata-complete="true"这句话不要加删除，会导致无法扫描注解！省时间的@WebServlet("/路径")报错404.
+
+3.0 :
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 　　　　　 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" 　　　　   version="3.0" >  
+
+</web-app>
+```
+
+2.5:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+version="2.5">  
+
+</web-app>
+```
+
+2.4:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd" version="2.4">  
+</web-app>
+```
+
+2.3:
+
+```xml
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">  
+<web-app>  
+</web-app>
+```
+
+5.0 （？？？）
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_5_0.xsd"
+         version="5.0">
+```
 
 ###### 基于注解配置的 MVC 应用
 
@@ -1097,9 +1465,10 @@ public class UploadController {
             return "upload";
         }
 
-        // 项目结构下的路径，可以通过浏览器直接访问
+        // 项目结构下的路径，可以通过浏览器直接访问,如：C:\Users\chumeng\IdeaProjects\SpringMVC\out\artifacts\SpringMVC_war_exploded\pictures
 //        String path = request.getSession().getServletContext().getRealPath("upload");
 //        System.out.println(path);
+        // request.getContextPath() 站点路径
         
         try {
             String type = uploadFile.getContentType();
@@ -1192,3 +1561,47 @@ public class UploadController {
 Failed to complete request: org.springframework.web.multipart.MaxUploadSizeExceededException: Maximum upload size of 1024000 bytes exceeded; nested exception is org.apache.commons.fileupload.FileUploadBase$SizeLimitExceededException: the request was rejected because its size (6905224) exceeds the configured maximum (1024000)
 ```
 
+
+
+简单压缩文件上传到服务器（没什么用）
+
+```java
+    @PostMapping("zipUploadFile.form")
+    public String zipUploadFile(@RequestParam("file") MultipartFile uploadFile, HttpServletRequest request) throws IOException {
+        if (uploadFile.isEmpty()) {
+            request.setAttribute("message","空文件");
+            return "upload";
+        }
+
+        String path = request.getSession().getServletContext().getRealPath("zip");
+        String name = uploadFile.getOriginalFilename();
+        System.out.println(path);
+
+        File file = new File(path);
+        if ( !file.exists()) {
+            file.mkdir();
+        }
+
+        // 压缩
+        InputStream input = uploadFile.getInputStream();
+        BufferedInputStream bis = new BufferedInputStream(input);
+        File zipFile = new File(path + File.separator + name + ".zip");
+        ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(zipFile));
+        assert name != null;
+        zipOut.putNextEntry(new ZipEntry(name));
+        zipOut.setComment("test");
+
+        // 设置缓存大小 1M
+        byte[] bytes = new byte[1048576];
+        int i;
+        while ( (i = bis.read(bytes)) != -1) {
+            zipOut.write(bytes,0,i);
+        }
+
+        input.close();
+        zipOut.close();
+
+        request.setAttribute("message","success");
+        return "upload";
+    }
+```
