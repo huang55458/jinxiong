@@ -1605,3 +1605,901 @@ Failed to complete request: org.springframework.web.multipart.MaxUploadSizeExcee
         return "upload";
     }
 ```
+
+
+
+
+
+#### SpringBoot
+
+
+
+###### lombok
+
+Lombok 是一种 Java™ 实用工具，可用来帮助开发人员消除 Java 的冗长，尤其是对于简单的 Java 对象（POJO）
+
+lombok的主要作用是通过一些注解，消除样板式代码
+
+```java
+@Data
+
+	相当于 @ToString, @EqualsAndHashCode, @Getter on all fields, and @Setter on 	all non-final fields, and @RequiredArgsConstructor
+    
+public class Mountain{
+    private String name;
+    private double longitude;
+    private String country;
+}
+```
+
+如果觉得@Data这个注解有点简单粗暴的话,Lombok提供一些更精细的注解,比如@Getter,@Setter,(这两个是field注解),@ToString,@AllArgsConstructor(这两个是类注解)
+
+[详细用法](https://projectlombok.org/features/all)
+
+
+
+
+
+SpringBoot 是 Spring 的简化版，可以通过 SpringBoot 快速搭建Spring 开发环境
+
+主流 SpringBoot 环境构建（SpringBoot + Maven），编码、配置、部署、监控 变得更加简单
+
+- 简化 Spring 配置
+- 微服务的入门级框架
+
+
+
+排除加载类，（未配置会报错）
+
+```java
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
+```
+
+
+
+```java
+@RestController
+public class HelloController {
+    @GetMapping("hello")
+    public String hello(){
+        return "hello";
+    }
+}
+```
+
+
+
+```
+ mvn spring-boot:run  // 项目目录下开启springboot 项目
+```
+
+`application.properties` 可以配置一些服务属性：
+
+```properties
+server.port=8080
+server.servlet.context-path=/
+
+#在有多个属性配置文件时，可以通过下面的命令切换（此时有个application-test.properties 文件）
+spring.profiles.active=test
+```
+
+
+
+- @RestController = @Controller + @ResponseBody
+- `@GetMapping({"hello","world"})`
+
+
+
+
+
+###### 在springboot 中注入参数
+
+1. 使用 `@PropertySource()` 注解
+
+   ```java
+   @PropertySource("classpath:test.properties")
+   @RestController
+   public class HelloController {
+       @Value("${name}")
+       private String name;
+   
+       @Value("${password}")
+       private String password;
+   
+       @GetMapping("hello")
+       public String hello(){
+           return "hello" + name + password;
+       }
+   }
+   ```
+
+   test.properties 文件中 ：
+
+   ```properties
+   name=root
+   password=123
+   ```
+
+   根据不同的业务场景使用不同的属性，可以更改 `classpath` 路径快速更换
+
+2. `@ConfigurationProperties()`
+
+   ```xml
+   <dependency>
+       <groupId>org.springframework.boot</groupId>
+       <artifactId>spring-boot-configuration-processor</artifactId>
+       <optional>true</optional>
+   </dependency>
+   ```
+
+   新建 application.yml 文件配置属性（名字错误无法找到，原因未知）
+
+   ```yml
+   user:
+     username: test
+     password: 123
+   ```
+
+   ```java
+   @RestController
+   @ConfigurationProperties(prefix = "user")
+   @Data
+   public class HelloController {
+       private String username;
+   
+       private String password;
+   
+       @GetMapping("hello")
+       public String hello(){
+           return "hello" + username + password;
+       }
+   }
+   ```
+
+
+
+###### 获取参数
+
+- @pathVariable
+
+```java
+@ResponseBody
+@GetMapping("test1/{id}")
+public String test1(
+        @PathVariable int id
+){
+    return "id : " + id;
+}
+```
+
+- @requestParam
+  - `@requestParam(value="id",required=false,default="0")`
+
+
+
+###### Spring-data-jpa
+
+jpa定义了一系列对象持久化的标准，实现这一规范的产品如 Hibernate
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+```
+
+```properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/java220201?characterEncoding=utf8
+spring.datasource.username=root
+spring.datasource.password=hjx20010707
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=create #重启项目如果表不存在会重新创建
+```
+
+spring.jpa.hibernate.ddl-auto 的取值：
+
+- update 第一次启动的时候创建，如果存在数据将不会删除
+- create-drop 项目停下即删除
+- none 什么也不做
+- validate  表示会验证类中的数据和表结构是否一致，如果不一致将会报错
+
+
+
+```java
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@RequiredArgsConstructor
+@Entity
+public class Uses {
+    @Id
+    @GeneratedValue
+    private int id;
+    private String name;
+    private int age;
+//    private double money;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) {
+            return false;
+        }
+        Uses uses = (Uses) o;
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+}
+```
+
+```java
+@Repository
+public interface UsesDao extends JpaRepository<Uses,Integer> {
+}
+```
+
+
+
+- 无论是 get 、post 请求，@pathVariable 和 @RequestParam 都可以接收
+
+```java
+@GetMapping("getAllUses")
+public List<Uses> getAll(){
+    return usesDao.findAll();
+}
+
+@PostMapping("addUses")
+public Uses addUses(String name,int age){
+    return usesDao.save(new Uses(name,age));
+}
+
+@GetMapping("uses/{id}")
+public Uses usesFindOne(@PathVariable("id") Integer id) {
+    return usesDao.findById(id).orElse(null);
+}
+
+@PutMapping("uses/{id}")
+public Uses update(@PathVariable("id") Integer id,String name,int age) {
+    return usesDao.save(new Uses(id,name,age));
+}
+
+@DeleteMapping("/delete/{id}")
+public void delete(@PathVariable("id") Integer id) {
+    usesDao.deleteById(id);
+}
+
+@GetMapping("uses/age/{age}")
+public List<Uses> findById(@PathVariable("age") int age) {
+    return usesDao.findByAge(age);
+}
+```
+
+
+
+###### 事务
+
+```java
+@Transactional
+```
+
+
+
+###### @Valid
+
+```xml
+<dependency> 
+    <groupId>org.springframework.boot</groupId> 
+    <artifactId>spring-boot-starter-validation</artifactId> 
+</dependency>
+```
+
+entity：
+
+```java
+@NotNull(message = "age is null")
+@Min(value = 18,message = "未成年禁止注册")
+private int age;
+```
+
+controller：
+
+```java
+    @PostMapping("addUses")
+    public String addUses(@Valid Uses uses, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+//            System.out.println(bindingResult.getFieldError().getDefaultMessage());
+            System.out.println(bindingResult.getAllErrors().get(0).getDefaultMessage());
+//            return null;
+            return bindingResult.getAllErrors().get(0).getDefaultMessage();
+        }
+        return "success";
+    }
+```
+
+@valid 通过 bindingResult 的 hasErrors 方法来验证，当有错误时会通过 return 来结束方法的运行
+
+
+
+###### @Validated
+
+假设此时实体类上已经写好验证条件
+
+```java
+    @PostMapping("addUses")
+    public String addUses(@Validated Uses uses) {
+        return "success";
+    }
+```
+
+如果验证不通过，直接抛出异常，需要写一个异常类进行捕获处理
+
+```java
+@RestControllerAdvice
+public class ValidExceptionHandler {
+ // 注意不要导错异常类
+    @ExceptionHandler(BindException.class)
+    public String validExceptionHandler(BindException exception) {
+        return exception.getAllErrors().get(0).getDefaultMessage();
+    }
+ 
+}
+```
+
+@valid 和 @Validated 区别：
+
+- @Valid 和 @Validated 两者都可以对数据进行校验，待校验字段上打的规则注解（@NotNull, @NotEmpty等）都可以对 @Valid 和 @Validated 生效
+- @Valid 进行校验的时候，需要用 BindingResult 来做一个校验结果接收。当校验不通过的时候，如果手动不 return ，则并不会阻止程序的执行
+- @Validated 进行校验的时候，当校验不通过的时候，程序会抛出400异常，阻止方法中的代码执行，这时需要再写一个全局校验异常捕获处理类，然后返回校验提示
+
+
+
+
+
+###### SpringBoot + Mybatis
+
+
+
+```xml
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <scope>runtime</scope>
+</dependency>
+// 强大的数据源
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.2.11</version>
+</dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+```
+
+dao:
+
+```java
+@Repository
+@Transactional
+public interface UserDao {
+    void insertUser(User user);
+}
+```
+
+```java
+@SpringBootApplication
+@MapperScan("com.example.springbootmybatis.dao")
+public class SpringbootMybatisApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringbootMybatisApplication.class, args);
+    }
+
+}
+```
+
+Resources 下的 mapper 文件夹
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.springbootmybatis.dao.UserDao">
+    <select id="insertUser">
+        insert into user(name,age) values (#{name},#{age})
+    </select>
+</mapper>
+```
+
+```properties
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/java220201?characterEncoding=utf8
+spring.datasource.username=root
+spring.datasource.password=hjx20010707
+
+
+// application.properties
+mybatis.mapper-locations=classpath:mappers/*Mapper.xml
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+#指定 Mybatis 所有的数据类的包所在的位置
+mybatis.type-aliases-package=com.example.springbootmybatis.entity
+```
+
+**需要注意命名空间**
+
+
+
+###### AOP
+
+（挺有趣的）
+
+```java
+@Aspect
+@Component
+public class HttpAspect {
+    private static final Logger LOG = LoggerFactory.getLogger(HttpAspect.class);
+
+    @Pointcut("execution(public * com.chumeng.springboot.controller.UsesController.*(..))")
+    public void log() {
+    }
+
+    @Before("log()")
+    public void doBefore(JoinPoint joinPoint){
+        LOG.info(" ---- before ----------  ");
+        ServletRequestAttributes a = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = a.getRequest();
+
+        LOG.info("url = {} ",request.getRequestURL());
+        LOG.info("method = {} ",request.getMethod());
+        LOG.info("ip = {} ",request.getRemoteAddr());
+        LOG.info("class_method = {} ",joinPoint.getSignature().getDeclaringTypeName() + "." +joinPoint.getSignature().getName());
+        LOG.info("args = {} ",joinPoint.getArgs());
+        LOG.info(" -------- before end ------------ ");
+    }
+
+    @After("log()")
+    public void doAfter(){
+        LOG.warn(" ----- After ---------------");
+    }
+
+    @AfterReturning(returning = "object",pointcut = "log()")
+    public void doAfterReturn(Object object) {
+        LOG.warn(" ----- AfterReturning begin ---------------");
+        LOG.info("response = {}",object.toString());
+        LOG.warn(" ----- AfterReturning end ---------------");
+    }
+
+    @Around("log()")
+    public Object doAround(ProceedingJoinPoint pjp) throws Throwable {
+        LOG.warn(" ----- around begin ---------------");
+        String classname = pjp.getTarget().getClass().getName();
+        String method = pjp.getSignature().getName();
+        System.out.println(classname + "." + method);
+
+        Object object = pjp.proceed();
+        LOG.warn(" ----- around end ---------------");
+        return object;
+    }
+
+    @AfterThrowing(value = "log()",throwing = "e")
+    public void doAfterThrowing(Exception e){
+        LOG.warn(" ----- AfterThrowing begin ---------------");
+        System.out.println(e.getStackTrace()[0].toString());
+        LOG.warn(" ----- AfterThrowing end ---------------");
+    }
+}
+```
+
+输出：
+
+```
+2022-08-01 19:27:41,332 WARN  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ----- around begin ---------------
+com.chumeng.springboot.controller.UsesController.getAll
+2022-08-01 19:27:41,333 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ---- before ----------  
+2022-08-01 19:27:41,333 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: url = http://127.0.0.1:8080/getAllUses 
+2022-08-01 19:27:41,334 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: method = GET 
+2022-08-01 19:27:41,334 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: ip = 127.0.0.1 
+2022-08-01 19:27:41,334 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: class_method = com.chumeng.springboot.controller.UsesController.getAll 
+2022-08-01 19:27:41,334 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: args = {} 
+2022-08-01 19:27:41,334 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  -------- before end ------------ 
+2022-08-01 19:27:41,420 WARN  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ----- AfterReturning begin ---------------
+2022-08-01 19:27:41,422 INFO  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect: response = [Uses(id=1, name=fss, age=22), Uses(id=2, name=ss, age=22), Uses(id=36, name=faaaaaaaaaa, age=333), Uses(id=222, name=ffs, age=22)]
+2022-08-01 19:27:41,423 WARN  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ----- AfterReturning end ---------------
+2022-08-01 19:27:41,423 WARN  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ----- After ---------------
+2022-08-01 19:27:41,423 WARN  [http-nio-8080-exec-1] com.chumeng.springboot.aspect.HttpAspect:  ----- around end ---------------
+```
+
+
+
+<img src=".\note_imgs\aop.jpg" style="zoom:80%;" />
+
+
+
+###### 异常处理
+
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ErrorStatusCodeAndMessage<C>{
+    private int code;
+    private String msg;
+    private C data;
+}
+```
+
+
+
+```java
+    @PostMapping("addUses")
+    public ErrorStatusCodeAndMessage<Uses> addUses(@Valid Uses uses, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {            System.out.println(bindingResult.getAllErrors().get(0).getDefaultMessage());
+            return new ErrorStatusCodeAndMessage<>(0, bindingResult.getAllErrors().get(0).getDefaultMessage(), null);
+        }
+        return new ErrorStatusCodeAndMessage<>(1, "success", usesDao.save(uses));
+    }
+```
+
+简单升级：
+
+```java
+@PostMapping("addUses")
+public StatusCodeAndMessage<Uses> addUses(@Validated Uses uses) {
+    return new StatusCodeAndMessage<>(1, "success", usesDao.save(uses));
+}
+
+@ExceptionHandler(BindException.class)
+public StatusCodeAndMessage<Uses> testExceptionHandler(BindException e){
+    System.out.println("exceptionHandler");
+    return new StatusCodeAndMessage<>(0, e.getAllErrors().get(0).getDefaultMessage(), null);
+}
+```
+
+
+
+高级用法：
+
+1. 自定义异常类
+
+   ```java
+   @Getter
+   @Setter
+   public class UsesException extends Exception {
+       private int code;
+   
+   //    public UsesException(int code, String message) {
+   //        super(message);
+   //        this.code = code;
+   //    }
+   
+           public UsesException(ResultEnum resultEnum) {
+           super(resultEnum.getMsg());
+           this.code = resultEnum.getAge();
+       }
+   }
+   ```
+
+2. 异常处理类
+
+   ```java
+   @RestControllerAdvice
+   public class StatusExceptionHandler {
+       @ExceptionHandler(Exception.class)
+       public StatusCodeAndMessage<Object> handler(Exception e){
+           if (e instanceof UsesException) {
+               return ResultUtil.error(((UsesException)e).getCode(), e.getMessage());
+           }
+           return ResultUtil.error(ResultEnum.UNKNOWN_ERROR);
+       }
+   }
+   ```
+
+3. 状态枚举
+
+   ```java
+   public enum ResultEnum {
+       UNKNOWN_ERROR(-1,"未知错误"),
+       SUCCESS(0,"成功"),
+       AGE_MIN_18(100,"age 小于 18"),
+       AGE_MIN_12(101,"age 小于 12"),
+       ;
+       private Integer age;
+       private String msg;
+   
+       public Integer getAge() {
+           return age;
+       }
+   
+       public void setAge(Integer age) {
+           this.age = age;
+       }
+   
+       public String getMsg() {
+           return msg;
+       }
+   
+       public void setMsg(String msg) {
+           this.msg = msg;
+       }
+   
+       ResultEnum() {
+       }
+   
+       ResultEnum(Integer age, String msg) {
+           this.age = age;
+           this.msg = msg;
+       }
+   }
+   ```
+
+4. json 数据对象
+
+   ```java
+   @Data
+   @AllArgsConstructor
+   @NoArgsConstructor
+   public class StatusCodeAndMessage<C>{
+       private int code;
+       private String msg;
+       private C data;
+   }
+   ```
+
+   ```java
+   public class ResultUtil {
+       public static StatusCodeAndMessage<Object> success(Object object) {
+           StatusCodeAndMessage<Object> statusCodeAndMessage = new StatusCodeAndMessage<>();
+           statusCodeAndMessage.setCode(0);
+           statusCodeAndMessage.setMsg("success");
+           statusCodeAndMessage.setData(object);
+           return statusCodeAndMessage;
+       }
+   
+       public static StatusCodeAndMessage<Object> success() {
+           return success(null);
+       }
+   
+       public static StatusCodeAndMessage<Object> error(ResultEnum resultEnum) {
+           StatusCodeAndMessage<Object> statusCodeAndMessage = new StatusCodeAndMessage<>();
+           statusCodeAndMessage.setCode(resultEnum.getAge());
+           statusCodeAndMessage.setMsg(resultEnum.getMsg());
+           return statusCodeAndMessage;
+       }
+       public static StatusCodeAndMessage<Object> error(int age, String msg) {
+           StatusCodeAndMessage<Object> statusCodeAndMessage = new StatusCodeAndMessage<>();
+           statusCodeAndMessage.setCode(age);
+           statusCodeAndMessage.setMsg(msg);
+           return statusCodeAndMessage;
+       }
+   }
+   ```
+
+
+
+
+
+###### ~~单元测试~~ 集成测试
+
+
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+
+
+maven 工具对项目进行打包的时候会自动进行单元测试
+
+```
+mvn clean package
+-Dmaven.test.skip=true //跳过测试，快速打包
+```
+
+```java
+@SpringBootTest
+//@SpringJUnitConfig
+@RunWith(SpringRunner.class)
+@AutoConfigureMockMvc
+//@BootstrapWith
+
+//@WebMvcTest
+//@DataJpaTest
+class UsesControllerTest {
+    @Autowired
+    private UsesController usesController;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void getAll() throws Exception {
+//        usesController.getAll();
+        mockMvc.perform(MockMvcRequestBuilders.get("/getAllUses")).andExpect(MockMvcResultMatchers.status().isOk());
+//        mockMvc.perform(MockMvcRequestBuilders.get("getAllUses")).andExpect(MockMvcResultMatchers.content().string("abc"));
+        Assertions.assertFalse(false);
+    }
+}
+```
+
+
+
+
+
+#### thymeleaf
+
+头部参数：
+
+```html
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+```
+
+
+
+轻量级的模板引擎，配合 html 实现服务器和页面之间的数据交互
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+语法：
+
+- th:text ：在页面中输出值
+- th:value ：可以将一个值放到 input 标签的value 中
+- ${#strings.isEmpty(str)} 判断字符串是否为空，为空则返回 true，否则返回 false
+
+
+
+- 简单的表达：
+  - 变量表达式：`${...}`
+  - 选择变量表达式：`*{...}`
+  - 消息表达式：`#{...}`
+  - 链接 URL 表达式：`@{...}`
+- 字面量
+  - 文本字面量：`'one text'`, `'Another one!'`,…
+  - 数字文字：`0`, `34`, `3.0`, `12.3`,...
+  - 布尔文字：`true`,`false`
+  - 空文字：`null`
+  - 文字标记：`one`, `sometext`, `main`,…
+- 文字操作：
+  - 字符串连接：`+`
+  - 字面替换：`|The name is ${name}|`
+- 算术运算：
+  - 二元运算符：`+`, `-`, `*`, `/`,`%`
+  - 减号（一元运算符）：`-`
+- 布尔运算：
+  - 二元运算符：`and`,`or`
+  - 布尔否定（一元运算符）`!`：,`not`
+- 比较和平等：
+  - 比较器：`>`, `<`, `>=`, `<=`( `gt`, `lt`, `ge`, `le`)
+  - 等式运算符：`==`, `!=`( `eq`, `ne`)
+- 条件运算符：
+  - 如果-那么：`(if) ? (then)`
+  - 如果-那么-否则：`(if) ? (then) : (else)`
+  - 默认：`(value) ?: (defaultvalue)`
+
+
+
+###### 文字替换
+
+```html
+<span th:text="|Welcome to our application, ${user.name}!|">
+```
+
+使用 双竖线  `||`，相当于
+
+```html
+<span th:text="'Welcome to our application, ' + ${user.name} + '!'">
+```
+
+文字替换中只允许使用变量表达式 ( `${...}`) 
+
+
+
+```html
+<span th:text="${msg}"></span><br>
+<input value="2" th:value="${msg}"><br>
+<span th:text="${#strings.isEmpty(msg)}"></span><br>
+<span th:text="${#strings.contains(msg,'9')}"></span><br>
+<span th:text="${#strings.contains(msg,'h')}"></span><br>
+<span th:text="${#strings.startsWith(msg,'9')}"></span><br>
+<span th:text="${#strings.startsWith(msg,'t')}"></span><br>
+<span th:text="${#strings.endsWith(msg,'9')}"></span><br>
+<span th:text="${#strings.endsWith(msg,'f')}"></span><br>
+<span th:text="${#strings.length(msg)}"></span><br>
+<span th:text="${#strings.indexOf(msg,'y')}"></span><br>
+<span th:text="${#strings.indexOf(msg,'y')}"></span><br>
+<span th:text="${#strings.substring(msg,4)}"></span><br>
+<span th:text="${#strings.substring(msg,4,7)}"></span><br>
+<span th:text="${#strings.toUpperCase(msg)}"></span><br>
+<span th:text="${#strings.toLowerCase(msg)}"></span><br>
+
+<span th:text="${#dates.format(date)}"></span><br>
+<span th:text="${#dates.format(date,'yyyy-MM-dd')}"></span><br>
+<span th:text="${#dates.year(date)}"></span><br>
+<span th:text="${#dates.month(date)}"></span><br>
+<span th:text="${#dates.day(date)}"></span><br>
+
+<span th:if="${sex == '男'}">男</span>
+<span th:if="${sex == '女'}">女</span><br>
+
+<div th:switch="${id}">
+    <span th:case="1">1</span>
+    <span th:case="2">2</span>
+    <span th:case="3">3</span>
+</div>
+```
+
+```html
+<table style="border-collapse: collapse">
+    <tr><th>id</th><th>username</th><th>age</th></tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.age}"></td>
+    </tr>
+</table>
+<hr>
+<table style="border-collapse: collapse">
+    <tr><th>id</th><th>username</th><th>age</th>
+        <th>index</th><th>count</th><th>size</th>
+        <th>even</th><th>odd</th><th>first</th><th>last</th></tr>
+    <tr th:each="user,var : ${users}">
+        <td th:text="${user.id}"></td>
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.age}"></td>
+        <td th:text="${var.index}"></td>
+        <td th:text="${var.count}"></td>
+        <td th:text="${var.size}"></td>
+        <td th:text="${var.even}"></td>
+        <td th:text="${var.odd}"></td>
+        <td th:text="${var.first}"></td>
+        <td th:text="${var.last}"></td>
+    </tr>
+</table>
+<hr>
+<table style="border-collapse: collapse">
+    <tr><th>address</th></tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user}"></td>
+    </tr>
+</table>
+<hr>
+<table style="border-collapse: collapse">
+    <tr><th>id</th><th>username</th><th>age</th></tr>
+    <tr th:each="user : ${users}">
+        <td th:each="entry:${user}" th:text="${user.id}"></td>
+        <td th:each="entry:${user}" th:text="${user.username}"></td>
+        <td th:each="entry:${user}" th:text="${user.age}"></td>
+    </tr>
+</table>
+<hr>
+request:<span th:text="${#request.getAttribute('request')}"></span><br>
+session:<span th:text="${session.session}"></span><br>
+application:<span th:text="${application.servletContext}"></span>
+```
