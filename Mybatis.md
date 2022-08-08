@@ -251,7 +251,7 @@ List<HashMap<String,Object>> findAllDept();
 
 ###### ResultMap 映射定义
 
-在 SqlMap.xml 定义 <select> 操作时，如果查询结果字段名和 java pojo 属性不一致时，需要使用 <resultMap> 元素显示指定映射关系（当实体属性和数据表字段名不一致时）
+在 SqlMap.xml 定义 < select> 操作时，如果查询结果字段名和 java pojo 属性不一致时，需要使用 <resultMap> 元素显示指定映射关系（当实体属性和数据表字段名不一致时）
 
 Test 类：
 
